@@ -1,2 +1,2 @@
 # farmapp
-A Farm Management System To Keep Records Accurately 
+A Farm Management System To Track Farm Activities
