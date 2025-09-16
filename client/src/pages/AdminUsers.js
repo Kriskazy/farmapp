@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './Pages.css';
+import { API_URL } from '../config';
 
 const AdminUsers = () => {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admin/users');
+      const response = await axios.get(`${API_URL}/api/admin/users`);
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -28,7 +29,7 @@ const AdminUsers = () => {
   const handleDeleteUser = async (userId, userName) => {
     if (window.confirm(`Are you sure you want to delete ${userName}?`)) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/users/${userId}`);
+        await axios.delete(`${API_URL}/api/admin/users/${userId}`);
         setMessage('User deleted successfully');
         fetchUsers(); // Refresh the list
       } catch (error) {
@@ -40,8 +41,8 @@ const AdminUsers = () => {
 
   const handleToggleStatus = async (userId, currentStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}/status`, {
-        isActive: !currentStatus
+      await axios.put(`${API_URL}/admin/users/${userId}/status`, {
+        isActive: !currentStatus,
       });
       setMessage('User status updated successfully');
       fetchUsers(); // Refresh the list
@@ -75,7 +76,11 @@ const AdminUsers = () => {
       </div>
 
       {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
+        <div
+          className={
+            message.includes('Error') ? 'error-message' : 'success-message'
+          }
+        >
           {message}
         </div>
       )}
@@ -105,7 +110,9 @@ const AdminUsers = () => {
                 </td>
                 <td>{userItem.phone || 'Not provided'}</td>
                 <td>
-                  <span className={`status-badge ${userItem.isActive ? 'active' : 'inactive'}`}>
+                  <span
+                    className={`status-badge ${userItem.isActive ? 'active' : 'inactive'}`}
+                  >
                     {userItem.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </td>
@@ -113,14 +120,18 @@ const AdminUsers = () => {
                 <td>
                   <div className="action-buttons">
                     <button
-                      onClick={() => handleToggleStatus(userItem._id, userItem.isActive)}
+                      onClick={() =>
+                        handleToggleStatus(userItem._id, userItem.isActive)
+                      }
                       className={`btn-small ${userItem.isActive ? 'btn-warning' : 'btn-success'}`}
                     >
                       {userItem.isActive ? 'Deactivate' : 'Activate'}
                     </button>
                     {userItem._id !== user._id && (
                       <button
-                        onClick={() => handleDeleteUser(userItem._id, userItem.name)}
+                        onClick={() =>
+                          handleDeleteUser(userItem._id, userItem.name)
+                        }
                         className="btn-small btn-danger"
                       >
                         Delete

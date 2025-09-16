@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './Pages.css';
-
+import { API_URL } from '../config';
 const Crops = () => {
   const { user } = useAuth();
   const [crops, setCrops] = useState([]);
@@ -11,7 +11,7 @@ const Crops = () => {
   const [editingCrop, setEditingCrop] = useState(null);
   const [message, setMessage] = useState('');
   const [stats, setStats] = useState(null);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     variety: '',
@@ -22,7 +22,7 @@ const Crops = () => {
     area: '',
     areaUnit: 'acres',
     status: 'planted',
-    notes: ''
+    notes: '',
   });
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const Crops = () => {
 
   const fetchCrops = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/crops');
+      const response = await axios.get(`${API_URL}/api/crops`);
       setCrops(response.data);
     } catch (error) {
       console.error('Error fetching crops:', error);
@@ -44,7 +44,7 @@ const Crops = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/crops/stats/overview');
+      const response = await axios.get(`${API_URL}/api/crops/stats/overview`);
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching crop stats:', error);
@@ -54,7 +54,7 @@ const Crops = () => {
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -65,14 +65,14 @@ const Crops = () => {
     try {
       if (editingCrop) {
         // Update existing crop
-        await axios.put(`http://localhost:5000/api/crops/${editingCrop._id}`, formData);
+        await axios.put(`${API_URL}/api/crops/${editingCrop._id}`, formData);
         setMessage('Crop updated successfully');
       } else {
         // Create new crop
-        await axios.post('http://localhost:5000/api/crops', formData);
+        await axios.post(`${API_URL}/api/crops`, formData);
         setMessage('Crop created successfully');
       }
-      
+
       // Reset form and refresh data
       resetForm();
       fetchCrops();
@@ -91,11 +91,13 @@ const Crops = () => {
       field: crop.field,
       plantedDate: crop.plantedDate.split('T')[0],
       expectedHarvestDate: crop.expectedHarvestDate.split('T')[0],
-      actualHarvestDate: crop.actualHarvestDate ? crop.actualHarvestDate.split('T')[0] : '',
+      actualHarvestDate: crop.actualHarvestDate
+        ? crop.actualHarvestDate.split('T')[0]
+        : '',
       area: crop.area,
       areaUnit: crop.areaUnit,
       status: crop.status,
-      notes: crop.notes || ''
+      notes: crop.notes || '',
     });
     setShowForm(true);
   };
@@ -103,7 +105,7 @@ const Crops = () => {
   const handleDelete = async (cropId, cropName) => {
     if (window.confirm(`Are you sure you want to delete ${cropName}?`)) {
       try {
-        await axios.delete(`http://localhost:5000/api/crops/${cropId}`);
+        await axios.delete(`${API_URL}/api/crops/${cropId}`);
         setMessage('Crop deleted successfully');
         fetchCrops();
         fetchStats();
@@ -124,7 +126,7 @@ const Crops = () => {
       area: '',
       areaUnit: 'acres',
       status: 'planted',
-      notes: ''
+      notes: '',
     });
     setEditingCrop(null);
     setShowForm(false);
@@ -136,10 +138,12 @@ const Crops = () => {
       growing: 'status-growing',
       ready: 'status-ready',
       harvested: 'status-harvested',
-      failed: 'status-failed'
+      failed: 'status-failed',
     };
-    
-    return <span className={`status-badge ${statusColors[status]}`}>{status}</span>;
+
+    return (
+      <span className={`status-badge ${statusColors[status]}`}>{status}</span>
+    );
   };
 
   if (loading) {
@@ -154,16 +158,17 @@ const Crops = () => {
     <div className="page-container">
       <div className="crops-header">
         <h1>🌱 Crop Management</h1>
-        <button 
-          className="btn-primary"
-          onClick={() => setShowForm(!showForm)}
-        >
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Add New Crop'}
         </button>
       </div>
 
       {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
+        <div
+          className={
+            message.includes('Error') ? 'error-message' : 'success-message'
+          }
+        >
           {message}
         </div>
       )}
@@ -320,7 +325,11 @@ const Crops = () => {
               <button type="submit" className="btn-primary">
                 {editingCrop ? 'Update Crop' : 'Add Crop'}
               </button>
-              <button type="button" onClick={resetForm} className="btn-secondary">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="btn-secondary"
+              >
                 Cancel
               </button>
             </div>
@@ -342,40 +351,57 @@ const Crops = () => {
                   <h3>{crop.name}</h3>
                   {getStatusBadge(crop.status)}
                 </div>
-                
+
                 {crop.variety && (
                   <p className="crop-variety">Variety: {crop.variety}</p>
                 )}
-                
+
                 <div className="crop-details">
-                  <p><strong>Field:</strong> {crop.field}</p>
-                  <p><strong>Area:</strong> {crop.area} {crop.areaUnit}</p>
-                  <p><strong>Planted:</strong> {new Date(crop.plantedDate).toLocaleDateString()}</p>
-                  <p><strong>Expected Harvest:</strong> {new Date(crop.expectedHarvestDate).toLocaleDateString()}</p>
+                  <p>
+                    <strong>Field:</strong> {crop.field}
+                  </p>
+                  <p>
+                    <strong>Area:</strong> {crop.area} {crop.areaUnit}
+                  </p>
+                  <p>
+                    <strong>Planted:</strong>{' '}
+                    {new Date(crop.plantedDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    <strong>Expected Harvest:</strong>{' '}
+                    {new Date(crop.expectedHarvestDate).toLocaleDateString()}
+                  </p>
                   {crop.actualHarvestDate && (
-                    <p><strong>Harvested:</strong> {new Date(crop.actualHarvestDate).toLocaleDateString()}</p>
+                    <p>
+                      <strong>Harvested:</strong>{' '}
+                      {new Date(crop.actualHarvestDate).toLocaleDateString()}
+                    </p>
                   )}
                 </div>
 
                 {crop.notes && (
                   <div className="crop-notes">
-                    <p><strong>Notes:</strong> {crop.notes}</p>
+                    <p>
+                      <strong>Notes:</strong> {crop.notes}
+                    </p>
                   </div>
                 )}
 
                 <div className="crop-meta">
                   <p>Added by: {crop.createdBy?.name || 'Unknown'}</p>
-                  <p>Created: {new Date(crop.createdAt).toLocaleDateString()}</p>
+                  <p>
+                    Created: {new Date(crop.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
 
                 <div className="crop-actions">
-                  <button 
+                  <button
                     onClick={() => handleEdit(crop)}
                     className="btn-small btn-secondary"
                   >
                     Edit
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(crop._id, crop.name)}
                     className="btn-small btn-danger"
                   >

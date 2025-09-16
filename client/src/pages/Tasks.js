@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './Pages.css';
+import { API_URL } from '../config';
 
 const Tasks = () => {
   const { user } = useAuth();
@@ -17,9 +18,9 @@ const Tasks = () => {
     priority: '',
     category: '',
     assignedTo: '',
-    overdue: false
+    overdue: false,
   });
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -32,7 +33,7 @@ const Tasks = () => {
     actualHours: '',
     location: '',
     notes: '',
-    workerNotes: ''
+    workerNotes: '',
   });
 
   useEffect(() => {
@@ -49,11 +50,12 @@ const Tasks = () => {
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.priority) queryParams.append('priority', filters.priority);
       if (filters.category) queryParams.append('category', filters.category);
-      if (filters.assignedTo) queryParams.append('assignedTo', filters.assignedTo);
+      if (filters.assignedTo)
+        queryParams.append('assignedTo', filters.assignedTo);
       if (filters.overdue) queryParams.append('overdue', 'true');
-      
+
       const response = await axios.get(
-        `http://localhost:5000/api/tasks?${queryParams.toString()}`
+        `${API_URL}/api/tasks?${queryParams.toString()}`
       );
       setTasks(response.data);
     } catch (error) {
@@ -66,7 +68,7 @@ const Tasks = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/tasks/stats/overview');
+      const response = await axios.get(`${API_URL}/api/tasks/stats/overview`);
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching task stats:', error);
@@ -75,10 +77,9 @@ const Tasks = () => {
 
   const fetchWorkers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/tasks/workers');
+      const response = await axios.get(`${API_URL}/api/tasks/workers`);
       console.log('Workers loaded:', response.data);
       setWorkers(response.data);
-    
     } catch (error) {
       console.error('Error fetching workers:', error);
     }
@@ -87,15 +88,16 @@ const Tasks = () => {
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleFilterChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFilters({
       ...filters,
-      [e.target.name]: value
+      [e.target.name]: value,
     });
   };
 
@@ -107,15 +109,15 @@ const Tasks = () => {
     try {
       if (editingTask) {
         // Update existing task
-        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, formData);
+        await axios.put(`${API_URL}/api/tasks/${editingTask._id}`, formData);
         setMessage('Task updated successfully');
       } else {
         // Create new task (admin only)
-        await axios.post('http://localhost:5000/api/tasks', formData);
+        await axios.post(`${API_URL}/api/tasks`, formData);
 
         setMessage('Task created successfully');
       }
-      
+
       // Reset form and refresh data
       resetForm();
       fetchTasks();
@@ -140,7 +142,7 @@ const Tasks = () => {
       actualHours: task.actualHours || '',
       location: task.location || '',
       notes: task.notes || '',
-      workerNotes: task.workerNotes || ''
+      workerNotes: task.workerNotes || '',
     });
     setShowForm(true);
   };
@@ -148,7 +150,7 @@ const Tasks = () => {
   const handleDelete = async (taskId, taskTitle) => {
     if (window.confirm(`Are you sure you want to delete "${taskTitle}"?`)) {
       try {
-        await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+        await axios.delete(`${API_URL}/api/tasks/${taskId}`);
         setMessage('Task deleted successfully');
         fetchTasks();
         fetchStats();
@@ -160,8 +162,8 @@ const Tasks = () => {
 
   const handleStatusUpdate = async (taskId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/tasks/${taskId}`, {
-        status: newStatus
+      await axios.put(`${API_URL}/api/tasks/${taskId}`, {
+        status: newStatus,
       });
       setMessage(`Task status updated to ${newStatus}`);
       fetchTasks();
@@ -184,7 +186,7 @@ const Tasks = () => {
       actualHours: '',
       location: '',
       notes: '',
-      workerNotes: ''
+      workerNotes: '',
     });
     setEditingTask(null);
     setShowForm(false);
@@ -195,10 +197,14 @@ const Tasks = () => {
       low: 'priority-low',
       medium: 'priority-medium',
       high: 'priority-high',
-      urgent: 'priority-urgent'
+      urgent: 'priority-urgent',
     };
-    
-    return <span className={`priority-badge ${priorityColors[priority]}`}>{priority}</span>;
+
+    return (
+      <span className={`priority-badge ${priorityColors[priority]}`}>
+        {priority}
+      </span>
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -206,10 +212,12 @@ const Tasks = () => {
       pending: 'status-pending',
       'in-progress': 'status-progress',
       completed: 'status-completed',
-      cancelled: 'status-cancelled'
+      cancelled: 'status-cancelled',
     };
-    
-    return <span className={`status-badge ${statusColors[status]}`}>{status}</span>;
+
+    return (
+      <span className={`status-badge ${statusColors[status]}`}>{status}</span>
+    );
   };
 
   const getCategoryIcon = (category) => {
@@ -221,7 +229,7 @@ const Tasks = () => {
       harvest: '🌾',
       planting: '🌿',
       feeding: '🥕',
-      other: '📋'
+      other: '📋',
     };
     return icons[category] || '📋';
   };
@@ -231,7 +239,7 @@ const Tasks = () => {
     const today = new Date();
     const diffTime = date - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return `${Math.abs(diffDays)} days overdue`;
     } else if (diffDays === 0) {
@@ -256,7 +264,7 @@ const Tasks = () => {
       <div className="tasks-header">
         <h1>📋 Task Management</h1>
         {user?.role === 'admin' && (
-          <button 
+          <button
             className="btn-primary"
             onClick={() => setShowForm(!showForm)}
           >
@@ -266,7 +274,11 @@ const Tasks = () => {
       </div>
 
       {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
+        <div
+          className={
+            message.includes('Error') ? 'error-message' : 'success-message'
+          }
+        >
           {message}
         </div>
       )}
@@ -303,7 +315,11 @@ const Tasks = () => {
       <div className="task-filters">
         <div className="filter-group">
           <label>Status:</label>
-          <select name="status" value={filters.status} onChange={handleFilterChange}>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+          >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
             <option value="in-progress">In Progress</option>
@@ -313,7 +329,11 @@ const Tasks = () => {
         </div>
         <div className="filter-group">
           <label>Priority:</label>
-          <select name="priority" value={filters.priority} onChange={handleFilterChange}>
+          <select
+            name="priority"
+            value={filters.priority}
+            onChange={handleFilterChange}
+          >
             <option value="">All Priorities</option>
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -323,7 +343,11 @@ const Tasks = () => {
         </div>
         <div className="filter-group">
           <label>Category:</label>
-          <select name="category" value={filters.category} onChange={handleFilterChange}>
+          <select
+            name="category"
+            value={filters.category}
+            onChange={handleFilterChange}
+          >
             <option value="">All Categories</option>
             <option value="crop">Crop</option>
             <option value="livestock">Livestock</option>
@@ -338,9 +362,13 @@ const Tasks = () => {
         {user?.role === 'admin' && (
           <div className="filter-group">
             <label>Assigned To:</label>
-            <select name="assignedTo" value={filters.assignedTo} onChange={handleFilterChange}>
+            <select
+              name="assignedTo"
+              value={filters.assignedTo}
+              onChange={handleFilterChange}
+            >
               <option value="">All Workers</option>
-              {workers.map(worker => (
+              {workers.map((worker) => (
                 <option key={worker._id} value={worker._id}>
                   {worker.name}
                 </option>
@@ -361,163 +389,172 @@ const Tasks = () => {
         </div>
       </div>
 
- {/* Create/Edit Task Form */}
-{showForm && user?.role === 'admin' && (
-  <div className="task-form-container">
-    <h3>{editingTask ? 'Edit Task' : 'Create New Task'}</h3>
-    <form onSubmit={handleSubmit} className="task-form">
-      <div className="form-row">
-        <div className="form-group">
-          <label>Task Title *</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            placeholder="e.g., Water the tomato field"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Assign To *</label>
-          <select
-            name="assignedTo"
-            value={formData.assignedTo}
-            onChange={handleInputChange}
-            required
-          >
-            <option value="">Select Worker</option>
-            {workers.map(worker => (
-              <option key={worker._id} value={worker._id}>
-                {worker.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      {/* Create/Edit Task Form */}
+      {showForm && user?.role === 'admin' && (
+        <div className="task-form-container">
+          <h3>{editingTask ? 'Edit Task' : 'Create New Task'}</h3>
+          <form onSubmit={handleSubmit} className="task-form">
+            <div className="form-row">
+              <div className="form-group">
+                <label>Task Title *</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Water the tomato field"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Assign To *</label>
+                <select
+                  name="assignedTo"
+                  value={formData.assignedTo}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Select Worker</option>
+                  {workers.map((worker) => (
+                    <option key={worker._id} value={worker._id}>
+                      {worker.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-      <div className="form-group">
-        <label>Description *</label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleInputChange}
-          placeholder="Detailed description of the task..."
-          rows="3"
-          required
-        />
-      </div>
+            <div className="form-group">
+              <label>Description *</label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Detailed description of the task..."
+                rows="3"
+                required
+              />
+            </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label>Category</label>
-          <select
-            name="category"
-            value={formData.category}
-            onChange={handleInputChange}
-          >
-            <option value="other">Other</option>
-            <option value="crop">Crop</option>
-            <option value="livestock">Livestock</option>
-            <option value="equipment">Equipment</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="harvest">Harvest</option>
-            <option value="planting">Planting</option>
-            <option value="feeding">Feeding</option>
-          </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  <option value="other">Other</option>
+                  <option value="crop">Crop</option>
+                  <option value="livestock">Livestock</option>
+                  <option value="equipment">Equipment</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="harvest">Harvest</option>
+                  <option value="planting">Planting</option>
+                  <option value="feeding">Feeding</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Priority</label>
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Due Date *</label>
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formData.dueDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Estimated Hours</label>
+                <input
+                  type="number"
+                  name="estimatedHours"
+                  value={formData.estimatedHours}
+                  onChange={handleInputChange}
+                  placeholder="0.0"
+                  step="0.5"
+                  min="0.1"
+                  max="24"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="e.g., North Field, Barn 2"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Notes</label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Any additional instructions or notes..."
+                rows="2"
+              />
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                {editingTask ? 'Update Task' : 'Create Task'}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
         </div>
-        <div className="form-group">
-          <label>Priority</label>
-          <select
-            name="priority"
-            value={formData.priority}
-            onChange={handleInputChange}
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="urgent">Urgent</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="form-row">
-        <div className="form-group">
-          <label>Due Date *</label>
-          <input
-            type="date"
-            name="dueDate"
-            value={formData.dueDate}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Estimated Hours</label>
-          <input
-            type="number"
-            name="estimatedHours"
-            value={formData.estimatedHours}
-            onChange={handleInputChange}
-            placeholder="0.0"
-            step="0.5"
-            min="0.1"
-            max="24"
-          />
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Location</label>
-        <input
-          type="text"
-          name="location"
-          value={formData.location}
-          onChange={handleInputChange}
-          placeholder="e.g., North Field, Barn 2"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Notes</label>
-        <textarea
-          name="notes"
-          value={formData.notes}
-          onChange={handleInputChange}
-          placeholder="Any additional instructions or notes..."
-          rows="2"
-        />
-      </div>
-
-      <div className="form-actions">
-        <button type="submit" className="btn-primary">
-          {editingTask ? 'Update Task' : 'Create Task'}
-        </button>
-        <button type="button" onClick={resetForm} className="btn-secondary">
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
-)}
+      )}
 
       {/* Tasks List */}
       <div className="tasks-list">
         {tasks.length === 0 ? (
           <div className="content-placeholder">
             <p>
-              {user?.role === 'admin' 
-                ? 'No tasks created yet. Click "Create New Task" to get started!' 
+              {user?.role === 'admin'
+                ? 'No tasks created yet. Click "Create New Task" to get started!'
                 : 'No tasks assigned to you yet.'}
             </p>
           </div>
         ) : (
           <div className="tasks-grid">
             {tasks.map((task) => (
-              <div key={task._id} className={`task-card ${task.isOverdue ? 'overdue' : ''}`}>
+              <div
+                key={task._id}
+                className={`task-card ${task.isOverdue ? 'overdue' : ''}`}
+              >
                 <div className="task-header">
                   <div className="task-title-section">
-                    <span className="task-icon">{getCategoryIcon(task.category)}</span>
+                    <span className="task-icon">
+                      {getCategoryIcon(task.category)}
+                    </span>
                     <h3>{task.title}</h3>
                   </div>
                   <div className="task-badges">
@@ -531,73 +568,104 @@ const Tasks = () => {
                 </div>
 
                 <div className="task-details">
-                  <p><strong>Due:</strong> <span className={task.isOverdue ? 'overdue-text' : ''}>{formatDate(task.dueDate)}</span></p>
+                  <p>
+                    <strong>Due:</strong>{' '}
+                    <span className={task.isOverdue ? 'overdue-text' : ''}>
+                      {formatDate(task.dueDate)}
+                    </span>
+                  </p>
                   {user?.role === 'admin' && (
-                    <p><strong>Assigned to:</strong> {task.assignedTo.name}</p>
+                    <p>
+                      <strong>Assigned to:</strong> {task.assignedTo.name}
+                    </p>
                   )}
-                  <p><strong>Category:</strong> {task.category}</p>
-                  {task.location && <p><strong>Location:</strong> {task.location}</p>}
+                  <p>
+                    <strong>Category:</strong> {task.category}
+                  </p>
+                  {task.location && (
+                    <p>
+                      <strong>Location:</strong> {task.location}
+                    </p>
+                  )}
                   {task.estimatedHours && (
-                    <p><strong>Est. Hours:</strong> {task.estimatedHours}h</p>
+                    <p>
+                      <strong>Est. Hours:</strong> {task.estimatedHours}h
+                    </p>
                   )}
                   {task.actualHours && (
-                    <p><strong>Actual Hours:</strong> {task.actualHours}h</p>
+                    <p>
+                      <strong>Actual Hours:</strong> {task.actualHours}h
+                    </p>
                   )}
                 </div>
 
                 {task.notes && (
                   <div className="task-notes">
-                    <p><strong>Notes:</strong> {task.notes}</p>
+                    <p>
+                      <strong>Notes:</strong> {task.notes}
+                    </p>
                   </div>
                 )}
 
                 {task.workerNotes && (
                   <div className="task-worker-notes">
-                    <p><strong>Worker Notes:</strong> {task.workerNotes}</p>
+                    <p>
+                      <strong>Worker Notes:</strong> {task.workerNotes}
+                    </p>
                   </div>
                 )}
 
                 <div className="task-meta">
                   <p>Created by: {task.createdBy.name}</p>
-                  <p>Created: {new Date(task.createdAt).toLocaleDateString()}</p>
+                  <p>
+                    Created: {new Date(task.createdAt).toLocaleDateString()}
+                  </p>
                   {task.completedAt && (
-                    <p>Completed: {new Date(task.completedAt).toLocaleDateString()}</p>
+                    <p>
+                      Completed:{' '}
+                      {new Date(task.completedAt).toLocaleDateString()}
+                    </p>
                   )}
                 </div>
 
                 <div className="task-actions">
                   {/* Status update buttons for workers */}
-                  {task.assignedTo._id === user._id && task.status !== 'completed' && (
-                    <div className="status-buttons">
-                      {task.status === 'pending' && (
-                        <button
-                          onClick={() => handleStatusUpdate(task._id, 'in-progress')}
-                          className="btn-small btn-primary"
-                        >
-                          Start Task
-                        </button>
-                      )}
-                      {task.status === 'in-progress' && (
-                        <button
-                          onClick={() => handleStatusUpdate(task._id, 'completed')}
-                          className="btn-small btn-success"
-                        >
-                          Complete
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {task.assignedTo._id === user._id &&
+                    task.status !== 'completed' && (
+                      <div className="status-buttons">
+                        {task.status === 'pending' && (
+                          <button
+                            onClick={() =>
+                              handleStatusUpdate(task._id, 'in-progress')
+                            }
+                            className="btn-small btn-primary"
+                          >
+                            Start Task
+                          </button>
+                        )}
+                        {task.status === 'in-progress' && (
+                          <button
+                            onClick={() =>
+                              handleStatusUpdate(task._id, 'completed')
+                            }
+                            className="btn-small btn-success"
+                          >
+                            Complete
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                   {/* Admin actions */}
                   {user?.role === 'admin' && (
                     <div className="admin-actions">
-                      <button 
+                      <button
                         onClick={() => handleEdit(task)}
                         className="btn-small btn-secondary"
                       >
                         Edit
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(task._id, task.title)}
                         className="btn-small btn-danger"
                       >
@@ -608,7 +676,7 @@ const Tasks = () => {
 
                   {/* Worker edit for status/notes */}
                   {task.assignedTo._id === user._id && (
-                    <button 
+                    <button
                       onClick={() => handleEdit(task)}
                       className="btn-small btn-secondary"
                     >

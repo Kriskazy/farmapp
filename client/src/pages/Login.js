@@ -8,7 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -18,13 +18,14 @@ const Login = () => {
     setLoading(true);
 
     const result = await login(email, password);
-    
+
     if (result.success) {
       navigate('/dashboard');
     } else {
       setError(result.error);
+      console.error('Login error:', result.error);
     }
-    
+
     setLoading(false);
   };
 
@@ -36,8 +37,8 @@ const Login = () => {
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email:</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -46,25 +47,31 @@ const Login = () => {
           </div>
           <div className="form-group">
             <label>Password:</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button 
-            type="submit" 
-            className="btn-primary"
-            disabled={loading}
-          >
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="auth-links">
+          <Link to="/forgot-password" className="auth-link forgot-link">
+            Forgot your password?
+          </Link>
+        </div>
+
         <p>
-          Don't have an account? 
-          <Link to="/register" className="auth-link"> Register as a farm worker</Link>
+          Don't have an account?
+          <Link to="/register" className="auth-link">
+            {' '}
+            Register as a farm worker
+          </Link>
         </p>
       </div>
     </div>

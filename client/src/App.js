@@ -11,6 +11,8 @@ import AdminUsers from './pages/AdminUsers';
 import Crops from './pages/Crops';
 import Livestock from './pages/Livestock';
 import Tasks from './pages/Tasks';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 function App() {
@@ -24,38 +26,58 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              
+
               {/* Protected Routes */}
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/crops" element={
-                <ProtectedRoute>
-                  <Crops />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/livestock" element={
-                <ProtectedRoute>
-                  <Livestock />
-                </ProtectedRoute>
-              } />
-              
-              <Route path="/tasks" element={
-                <ProtectedRoute>
-                  <Tasks />
-                </ProtectedRoute>
-              } />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/crops"
+                element={
+                  <ProtectedRoute>
+                    <Crops />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/livestock"
+                element={
+                  <ProtectedRoute>
+                    <Livestock />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute>
+                    <Tasks />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/reset-password/:resettoken"
+                element={<ResetPassword />}
+              />
 
               {/* Admin Only Routes */}
-              <Route path="/admin/users" element={
-                <ProtectedRoute adminOnly={true}>
-                  <AdminUsers />
-                </ProtectedRoute>
-              } />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
         </div>

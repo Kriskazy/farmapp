@@ -1,27 +1,28 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./Pages.css";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import './Pages.css';
+import { API_URL } from '../config';
 
 const Home = () => {
-  const [serverStatus, setServerStatus] = useState("Checking...");
-  const [dbStatus, setDbStatus] = useState("Checking...");
+  const [serverStatus, setServerStatus] = useState('Checking...');
+  const [dbStatus, setDbStatus] = useState('Checking...');
 
   useEffect(() => {
     const checkConnections = async () => {
       // Check server
       try {
-        const response = await axios.get("http://localhost:5000/api/test");
+        const response = await axios.get(`${API_URL}/api/test`);
         setServerStatus(response.data.message);
       } catch (error) {
-        setServerStatus("Server connection failed");
+        setServerStatus('Server connection failed');
       }
 
       // Check database
       try {
-        const dbResponse = await axios.get("http://localhost:5000/api/db-test");
+        const dbResponse = await axios.get(`${API_URL}/api/db-test`);
         setDbStatus(dbResponse.data.message);
       } catch (error) {
-        setDbStatus("Database connection failed");
+        setDbStatus('Database connection failed');
       }
     };
     checkConnections();

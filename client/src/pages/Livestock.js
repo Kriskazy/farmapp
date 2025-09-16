@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './Pages.css';
+import { API_URL } from '../config';
 
 const Livestock = () => {
   const { user } = useAuth();
@@ -14,9 +15,9 @@ const Livestock = () => {
   const [filters, setFilters] = useState({
     type: '',
     status: '',
-    location: ''
+    location: '',
   });
-  
+
   const [formData, setFormData] = useState({
     tagNumber: '',
     name: '',
@@ -28,7 +29,7 @@ const Livestock = () => {
     weightUnit: 'kg',
     healthStatus: 'healthy',
     location: '',
-    notes: ''
+    notes: '',
   });
 
   useEffect(() => {
@@ -42,9 +43,9 @@ const Livestock = () => {
       if (filters.type) queryParams.append('type', filters.type);
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.location) queryParams.append('location', filters.location);
-      
+
       const response = await axios.get(
-        `http://localhost:5000/api/livestock?${queryParams.toString()}`
+        `${API_URL}/api/livestock?${queryParams.toString()}`
       );
       setLivestock(response.data);
     } catch (error) {
@@ -57,7 +58,9 @@ const Livestock = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/livestock/stats/overview');
+      const response = await axios.get(
+        `${API_URL}/api/livestock/stats/overview`
+      );
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching livestock stats:', error);
@@ -67,14 +70,14 @@ const Livestock = () => {
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleFilterChange = (e) => {
     setFilters({
       ...filters,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -85,14 +88,17 @@ const Livestock = () => {
     try {
       if (editingLivestock) {
         // Update existing livestock
-        await axios.put(`http://localhost:5000/api/livestock/${editingLivestock._id}`, formData);
+        await axios.put(
+          `${API_URL}/api/livestock/${editingLivestock._id}`,
+          formData
+        );
         setMessage('Animal updated successfully');
       } else {
         // Create new livestock
-        await axios.post('http://localhost:5000/api/livestock', formData);
+        await axios.post(`${API_URL}/api/livestock`, formData);
         setMessage('Animal added successfully');
       }
-      
+
       // Reset form and refresh data
       resetForm();
       fetchLivestock();
@@ -116,15 +122,17 @@ const Livestock = () => {
       weightUnit: animal.weightUnit,
       healthStatus: animal.healthStatus,
       location: animal.location || '',
-      notes: animal.notes || ''
+      notes: animal.notes || '',
     });
     setShowForm(true);
   };
 
   const handleDelete = async (animalId, tagNumber) => {
-    if (window.confirm(`Are you sure you want to delete animal ${tagNumber}?`)) {
+    if (
+      window.confirm(`Are you sure you want to delete animal ${tagNumber}?`)
+    ) {
       try {
-        await axios.delete(`http://localhost:5000/api/livestock/${animalId}`);
+        await axios.delete(`${API_URL}/api/livestock/${animalId}`);
         setMessage('Animal deleted successfully');
         fetchLivestock();
         fetchStats();
@@ -146,7 +154,7 @@ const Livestock = () => {
       weightUnit: 'kg',
       healthStatus: 'healthy',
       location: '',
-      notes: ''
+      notes: '',
     });
     setEditingLivestock(null);
     setShowForm(false);
@@ -158,10 +166,12 @@ const Livestock = () => {
       sick: 'health-sick',
       injured: 'health-injured',
       quarantine: 'health-quarantine',
-      deceased: 'health-deceased'
+      deceased: 'health-deceased',
     };
-    
-    return <span className={`health-badge ${statusColors[status]}`}>{status}</span>;
+
+    return (
+      <span className={`health-badge ${statusColors[status]}`}>{status}</span>
+    );
   };
 
   const getAnimalIcon = (type) => {
@@ -173,7 +183,7 @@ const Livestock = () => {
       chicken: '🐓',
       duck: '🦆',
       horse: '🐴',
-      other: '🐾'
+      other: '🐾',
     };
     return icons[type] || '🐾';
   };
@@ -183,7 +193,9 @@ const Livestock = () => {
     const today = new Date();
     const birth = new Date(birthDate);
     const age = today.getFullYear() - birth.getFullYear();
-    return age > 0 ? `${age} year${age > 1 ? 's' : ''} old` : 'Less than 1 year';
+    return age > 0
+      ? `${age} year${age > 1 ? 's' : ''} old`
+      : 'Less than 1 year';
   };
 
   if (loading) {
@@ -198,16 +210,17 @@ const Livestock = () => {
     <div className="page-container">
       <div className="livestock-header">
         <h1>🐄 Livestock Management</h1>
-        <button 
-          className="btn-primary"
-          onClick={() => setShowForm(!showForm)}
-        >
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Add New Animal'}
         </button>
       </div>
 
       {message && (
-        <div className={message.includes('Error') ? 'error-message' : 'success-message'}>
+        <div
+          className={
+            message.includes('Error') ? 'error-message' : 'success-message'
+          }
+        >
           {message}
         </div>
       )}
@@ -230,7 +243,7 @@ const Livestock = () => {
           <div className="stat-card">
             <h3>Types</h3>
             <div className="stat-detail">
-              {stats.typeBreakdown.map(type => (
+              {stats.typeBreakdown.map((type) => (
                 <div key={type._id}>
                   {getAnimalIcon(type._id)} {type._id}: {type.count}
                 </div>
@@ -244,7 +257,11 @@ const Livestock = () => {
       <div className="livestock-filters">
         <div className="filter-group">
           <label>Filter by Type:</label>
-          <select name="type" value={filters.type} onChange={handleFilterChange}>
+          <select
+            name="type"
+            value={filters.type}
+            onChange={handleFilterChange}
+          >
             <option value="">All Types</option>
             <option value="cattle">Cattle</option>
             <option value="sheep">Sheep</option>
@@ -258,7 +275,11 @@ const Livestock = () => {
         </div>
         <div className="filter-group">
           <label>Filter by Health:</label>
-          <select name="status" value={filters.status} onChange={handleFilterChange}>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+          >
             <option value="">All Status</option>
             <option value="healthy">Healthy</option>
             <option value="sick">Sick</option>
@@ -426,7 +447,11 @@ const Livestock = () => {
               <button type="submit" className="btn-primary">
                 {editingLivestock ? 'Update Animal' : 'Add Animal'}
               </button>
-              <button type="button" onClick={resetForm} className="btn-secondary">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="btn-secondary"
+              >
                 Cancel
               </button>
             </div>
@@ -446,39 +471,54 @@ const Livestock = () => {
               <div key={animal._id} className="livestock-card">
                 <div className="livestock-header">
                   <div className="animal-title">
-                    <span className="animal-icon">{getAnimalIcon(animal.type)}</span>
+                    <span className="animal-icon">
+                      {getAnimalIcon(animal.type)}
+                    </span>
                     <h3>{animal.name || animal.tagNumber}</h3>
                   </div>
                   {getHealthBadge(animal.healthStatus)}
                 </div>
-                
+
                 <div className="livestock-details">
-                  <p><strong>Age:</strong> {calculateAge(animal.birthDate)}</p>
+                  <p>
+                    <strong>Age:</strong> {calculateAge(animal.birthDate)}
+                  </p>
                   {animal.weight && (
-                    <p><strong>Weight:</strong> {animal.weight} {animal.weightUnit}</p>
+                    <p>
+                      <strong>Weight:</strong> {animal.weight}{' '}
+                      {animal.weightUnit}
+                    </p>
                   )}
-                  {animal.location && <p><strong>Location:</strong> {animal.location}</p>}
+                  {animal.location && (
+                    <p>
+                      <strong>Location:</strong> {animal.location}
+                    </p>
+                  )}
                 </div>
 
                 {animal.notes && (
                   <div className="livestock-notes">
-                    <p><strong>Notes:</strong> {animal.notes}</p>
+                    <p>
+                      <strong>Notes:</strong> {animal.notes}
+                    </p>
                   </div>
                 )}
 
                 <div className="livestock-meta">
                   <p>Added by: {animal.createdBy?.name || 'Unknown'}</p>
-                  <p>Created: {new Date(animal.createdAt).toLocaleDateString()}</p>
+                  <p>
+                    Created: {new Date(animal.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
 
                 <div className="livestock-actions">
-                  <button 
+                  <button
                     onClick={() => handleEdit(animal)}
                     className="btn-small btn-secondary"
                   >
                     Edit
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(animal._id, animal.tagNumber)}
                     className="btn-small btn-danger"
                   >

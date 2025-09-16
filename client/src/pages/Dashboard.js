@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './Pages.css';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/dashboard/overview');
+      const response = await axios.get(`${API_URL}/api/dashboard/overview`);
       setDashboardData(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -31,7 +32,7 @@ const Dashboard = () => {
       low: '#28a745',
       medium: '#ffc107',
       high: '#fd7e14',
-      urgent: '#dc3545'
+      urgent: '#dc3545',
     };
     return colors[priority] || '#6c757d';
   };
@@ -47,7 +48,7 @@ const Dashboard = () => {
       harvested: '#28a745',
       healthy: '#28a745',
       sick: '#dc3545',
-      injured: '#fd7e14'
+      injured: '#fd7e14',
     };
     return colors[status] || '#6c757d';
   };
@@ -87,8 +88,12 @@ const Dashboard = () => {
     <div className="page-container dashboard-container">
       {/* Dashboard Header */}
       <div className="dashboard-header">
-        <h1>{isAdmin ? '🎯 Farm Management Dashboard' : '🚜 My Farm Dashboard'}</h1>
-        <p>Welcome back, {dashboardData?.user?.name}! Here's your farm overview.</p>
+        <h1>
+          {isAdmin ? '🎯 Farm Management Dashboard' : '🚜 My Farm Dashboard'}
+        </h1>
+        <p>
+          Welcome back, {dashboardData?.user?.name}! Here's your farm overview.
+        </p>
       </div>
 
       {/* Quick Stats Overview */}
@@ -97,36 +102,51 @@ const Dashboard = () => {
           <div className="stat-icon">📋</div>
           <div className="stat-content">
             <h3>Tasks</h3>
-            <div className="stat-number">{dashboardData?.taskStats?.total || 0}</div>
+            <div className="stat-number">
+              {dashboardData?.taskStats?.total || 0}
+            </div>
             <div className="stat-detail">
-              {dashboardData?.taskStats?.pending || 0} pending • {dashboardData?.taskStats?.overdue || 0} overdue
+              {dashboardData?.taskStats?.pending || 0} pending •{' '}
+              {dashboardData?.taskStats?.overdue || 0} overdue
             </div>
           </div>
-          <Link to="/tasks" className="stat-link">View Tasks</Link>
+          <Link to="/tasks" className="stat-link">
+            View Tasks
+          </Link>
         </div>
 
         <div className="stat-card crops">
           <div className="stat-icon">🌱</div>
           <div className="stat-content">
             <h3>Crops</h3>
-            <div className="stat-number">{dashboardData?.cropStats?.total || 0}</div>
+            <div className="stat-number">
+              {dashboardData?.cropStats?.total || 0}
+            </div>
             <div className="stat-detail">
-              {dashboardData?.cropStats?.growing || 0} growing • {dashboardData?.cropStats?.ready || 0} ready
+              {dashboardData?.cropStats?.growing || 0} growing •{' '}
+              {dashboardData?.cropStats?.ready || 0} ready
             </div>
           </div>
-          <Link to="/crops" className="stat-link">View Crops</Link>
+          <Link to="/crops" className="stat-link">
+            View Crops
+          </Link>
         </div>
 
         <div className="stat-card livestock">
           <div className="stat-icon">🐄</div>
           <div className="stat-content">
             <h3>Livestock</h3>
-            <div className="stat-number">{dashboardData?.livestockStats?.total || 0}</div>
+            <div className="stat-number">
+              {dashboardData?.livestockStats?.total || 0}
+            </div>
             <div className="stat-detail">
-              {dashboardData?.livestockStats?.healthy || 0} healthy • {dashboardData?.livestockStats?.needAttention || 0} need attention
+              {dashboardData?.livestockStats?.healthy || 0} healthy •{' '}
+              {dashboardData?.livestockStats?.needAttention || 0} need attention
             </div>
           </div>
-          <Link to="/livestock" className="stat-link">View Livestock</Link>
+          <Link to="/livestock" className="stat-link">
+            View Livestock
+          </Link>
         </div>
 
         {isAdmin && (
@@ -134,12 +154,17 @@ const Dashboard = () => {
             <div className="stat-icon">👥</div>
             <div className="stat-content">
               <h3>Team</h3>
-              <div className="stat-number">{dashboardData?.totalUsers || 0}</div>
+              <div className="stat-number">
+                {dashboardData?.totalUsers || 0}
+              </div>
               <div className="stat-detail">
-                {dashboardData?.totalWorkers || 0} workers • {dashboardData?.activeUsers || 0} active
+                {dashboardData?.totalWorkers || 0} workers •{' '}
+                {dashboardData?.activeUsers || 0} active
               </div>
             </div>
-            <Link to="/admin/users" className="stat-link">Manage Users</Link>
+            <Link to="/admin/users" className="stat-link">
+              Manage Users
+            </Link>
           </div>
         )}
       </div>
@@ -152,25 +177,35 @@ const Dashboard = () => {
           <div className="dashboard-section">
             <div className="section-header">
               <h3>🎯 {isAdmin ? 'Upcoming Tasks' : 'My Upcoming Tasks'}</h3>
-              <Link to="/tasks" className="see-all-link">See all</Link>
+              <Link to="/tasks" className="see-all-link">
+                See all
+              </Link>
             </div>
             <div className="dashboard-list">
               {dashboardData?.upcomingTasks?.length > 0 ? (
-                dashboardData.upcomingTasks.map(task => (
+                dashboardData.upcomingTasks.map((task) => (
                   <div key={task._id} className="dashboard-item">
                     <div className="item-content">
                       <div className="item-title">{task.title}</div>
                       <div className="item-meta">
-                        <span 
+                        <span
                           className="item-status"
-                          style={{ backgroundColor: getTaskPriorityColor(task.priority) }}
+                          style={{
+                            backgroundColor: getTaskPriorityColor(
+                              task.priority
+                            ),
+                          }}
                         >
                           {task.priority}
                         </span>
-                        <span className="item-date">{formatDate(task.dueDate)}</span>
+                        <span className="item-date">
+                          {formatDate(task.dueDate)}
+                        </span>
                       </div>
                       {isAdmin && (
-                        <div className="item-assignee">Assigned to: {task.assignedTo?.name}</div>
+                        <div className="item-assignee">
+                          Assigned to: {task.assignedTo?.name}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -185,25 +220,32 @@ const Dashboard = () => {
           <div className="dashboard-section">
             <div className="section-header">
               <h3>🌱 Recent Crop Activity</h3>
-              <Link to="/crops" className="see-all-link">See all</Link>
+              <Link to="/crops" className="see-all-link">
+                See all
+              </Link>
             </div>
             <div className="dashboard-list">
               {dashboardData?.recentCrops?.length > 0 ? (
-                dashboardData.recentCrops.map(crop => (
+                dashboardData.recentCrops.map((crop) => (
                   <div key={crop._id} className="dashboard-item">
                     <div className="item-content">
                       <div className="item-title">{crop.name}</div>
                       <div className="item-meta">
-                        <span 
+                        <span
                           className="item-status"
-                          style={{ backgroundColor: getStatusColor(crop.status) }}
+                          style={{
+                            backgroundColor: getStatusColor(crop.status),
+                          }}
                         >
                           {crop.status}
                         </span>
                         <span className="item-location">{crop.field}</span>
                       </div>
                       <div className="item-dates">
-                        Expected harvest: {new Date(crop.expectedHarvestDate).toLocaleDateString()}
+                        Expected harvest:{' '}
+                        {new Date(
+                          crop.expectedHarvestDate
+                        ).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
@@ -252,11 +294,13 @@ const Dashboard = () => {
           <div className="dashboard-section">
             <div className="section-header">
               <h3>🐄 Livestock Overview</h3>
-              <Link to="/livestock" className="see-all-link">See all</Link>
+              <Link to="/livestock" className="see-all-link">
+                See all
+              </Link>
             </div>
             <div className="livestock-summary">
               {dashboardData?.livestockByType?.length > 0 ? (
-                dashboardData.livestockByType.map(type => (
+                dashboardData.livestockByType.map((type) => (
                   <div key={type._id} className="livestock-type">
                     <div className="type-info">
                       <span className="type-name">{type._id}</span>
@@ -279,21 +323,32 @@ const Dashboard = () => {
               <div className="overview-item">
                 <span className="overview-label">Total Area</span>
                 <span className="overview-value">
-                  {dashboardData?.cropAreaData?.reduce((total, area) => total + area.totalArea, 0) || 0} acres
+                  {dashboardData?.cropAreaData?.reduce(
+                    (total, area) => total + area.totalArea,
+                    0
+                  ) || 0}{' '}
+                  acres
                 </span>
               </div>
               <div className="overview-item">
                 <span className="overview-label">Crop Fields</span>
-                <span className="overview-value">{dashboardData?.cropStats?.total || 0}</span>
+                <span className="overview-value">
+                  {dashboardData?.cropStats?.total || 0}
+                </span>
               </div>
               <div className="overview-item">
                 <span className="overview-label">Active Animals</span>
-                <span className="overview-value">{dashboardData?.livestockStats?.total || 0}</span>
+                <span className="overview-value">
+                  {dashboardData?.livestockStats?.total || 0}
+                </span>
               </div>
               <div className="overview-item">
                 <span className="overview-label">Tasks This Week</span>
                 <span className="overview-value">
-                  {dashboardData?.weeklyTaskData?.reduce((total, day) => total + day.count, 0) || 0}
+                  {dashboardData?.weeklyTaskData?.reduce(
+                    (total, day) => total + day.count,
+                    0
+                  ) || 0}
                 </span>
               </div>
             </div>
