@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import './Pages.css';
@@ -36,15 +36,7 @@ const Tasks = () => {
     workerNotes: '',
   });
 
-  useEffect(() => {
-    fetchTasks();
-    fetchStats();
-    if (user?.role === 'admin') {
-      fetchWorkers();
-    }
-  }, [filters, user]);
-
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams();
       if (filters.status) queryParams.append('status', filters.status);
@@ -64,18 +56,18 @@ const Tasks = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/tasks/stats/overview`);
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching task stats:', error);
     }
-  };
+  }, []);
 
-  const fetchWorkers = async () => {
+  const fetchWorkers = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/tasks/workers`);
       console.log('Workers loaded:', response.data);
@@ -83,7 +75,15 @@ const Tasks = () => {
     } catch (error) {
       console.error('Error fetching workers:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+    fetchStats();
+    if (user?.role === 'admin') {
+      fetchWorkers();
+    }
+  }, [fetchTasks, fetchStats, fetchWorkers, user?.role]);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -114,7 +114,6 @@ const Tasks = () => {
       } else {
         // Create new task (admin only)
         await axios.post(`${API_URL}/api/tasks`, formData);
-
         setMessage('Task created successfully');
       }
 
@@ -136,7 +135,7 @@ const Tasks = () => {
       category: task.category,
       priority: task.priority,
       status: task.status,
-      assignedTo: task.assignedTo._id,
+      assignedTo: task.assignedTo?._id || '',
       dueDate: task.dueDate.split('T')[0],
       estimatedHours: task.estimatedHours || '',
       actualHours: task.actualHours || '',
@@ -576,7 +575,8 @@ const Tasks = () => {
                   </p>
                   {user?.role === 'admin' && (
                     <p>
-                      <strong>Assigned to:</strong> {task.assignedTo.name}
+                      <strong>Assigned to:</strong>{' '}
+                      {task.assignedTo?.name || 'Unassigned'}
                     </p>
                   )}
                   <p>
@@ -616,7 +616,7 @@ const Tasks = () => {
                 )}
 
                 <div className="task-meta">
-                  <p>Created by: {task.createdBy.name}</p>
+                  <p>Created by: {task.createdBy?.name || 'Unknown'}</p>
                   <p>
                     Created: {new Date(task.createdAt).toLocaleDateString()}
                   </p>
@@ -630,7 +630,7 @@ const Tasks = () => {
 
                 <div className="task-actions">
                   {/* Status update buttons for workers */}
-                  {task.assignedTo._id === user._id &&
+                  {task.assignedTo?._id === user._id &&
                     task.status !== 'completed' && (
                       <div className="status-buttons">
                         {task.status === 'pending' && (
@@ -675,7 +675,7 @@ const Tasks = () => {
                   )}
 
                   {/* Worker edit for status/notes */}
-                  {task.assignedTo._id === user._id && (
+                  {task.assignedTo?._id === user._id && (
                     <button
                       onClick={() => handleEdit(task)}
                       className="btn-small btn-secondary"

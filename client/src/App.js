@@ -13,6 +13,8 @@ import Livestock from './pages/Livestock';
 import Tasks from './pages/Tasks';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Profile from './pages/Profile';
+
 import './App.css';
 
 function App() {
@@ -75,6 +77,14 @@ function App() {
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 }
               />
