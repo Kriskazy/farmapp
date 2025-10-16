@@ -11,6 +11,7 @@ connectDB();
 
 // Middleware
 app.use(cors());
+
 app.use(express.json());
 
 // Routes
@@ -20,7 +21,6 @@ app.use('/api/crops', require('./routes/crops'));
 app.use('/api/livestock', require('./routes/livestock'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/dashboard', require('./routes/dashboard'));
-
 
 // Basic test route
 app.get('/api/test', (req, res) => {
@@ -32,14 +32,14 @@ app.get('/api/db-test', async (req, res) => {
   try {
     const User = require('./models/User');
     const userCount = await User.countDocuments();
-    res.json({ 
-      message: 'Database connected successfully!', 
-      userCount: userCount 
+    res.json({
+      message: 'Database connected successfully!',
+      userCount: userCount,
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Database connection failed', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Database connection failed',
+      error: error.message,
     });
   }
 });
