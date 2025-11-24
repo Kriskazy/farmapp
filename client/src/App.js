@@ -19,6 +19,8 @@ import DiseaseDetection from './pages/DiseaseDetection';
 import Finance from './pages/Finance';
 import Inventory from './pages/Inventory';
 import FieldMap from './pages/FieldMap';
+import Help from './pages/Help';
+import InfoPage from './pages/InfoPage';
 
 import './App.css';
 
@@ -38,6 +40,12 @@ function App() {
                 path="/reset-password/:resettoken"
                 element={<ResetPassword />}
               />
+              <Route path="/privacy" element={<InfoPage />} />
+              <Route path="/terms" element={<InfoPage />} />
+              <Route path="/cookies" element={<InfoPage />} />
+              <Route path="/security" element={<InfoPage />} />
+              <Route path="/licenses" element={<InfoPage />} />
+              <Route path="/about" element={<InfoPage />} />
 
               {/* Protected Routes with Layout */}
               <Route
@@ -142,6 +150,17 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <Profile />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/help"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Help />
                     </Layout>
                   </ProtectedRoute>
                 }

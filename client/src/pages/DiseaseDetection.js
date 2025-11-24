@@ -3,11 +3,18 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { analyzeImage } from '../services/aiService';
 
+// Validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const ACCEPTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MIN_DIMENSION = 100;
+const MAX_DIMENSION = 4096;
+
 const DiseaseDetection = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileSelect = (e) => {
@@ -17,10 +24,61 @@ const DiseaseDetection = () => {
     }
   };
 
-  const processFile = (file) => {
-    setSelectedImage(file);
-    setPreviewUrl(URL.createObjectURL(file));
+  const processFile = async (file) => {
+    // Reset previous errors
+    setError(null);
     setResult(null);
+
+    // Validate file type
+    if (!ACCEPTED_FORMATS.includes(file.type)) {
+      setError('Invalid file type. Please upload a JPEG, PNG, or WebP image.');
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File size exceeds 5MB limit. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB.`);
+      return;
+    }
+
+    // Validate image dimensions
+    try {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          // Check dimensions
+          if (img.width < MIN_DIMENSION || img.height < MIN_DIMENSION) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error(`Image dimensions too small. Minimum size is ${MIN_DIMENSION}x${MIN_DIMENSION} pixels. Your image is ${img.width}x${img.height} pixels.`));
+            return;
+          }
+          
+          if (img.width > MAX_DIMENSION || img.height > MAX_DIMENSION) {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error(`Image dimensions too large. Maximum size is ${MAX_DIMENSION}x${MAX_DIMENSION} pixels. Your image is ${img.width}x${img.height} pixels.`));
+            return;
+          }
+          
+          resolve();
+        };
+        
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('Failed to load image. The file may be corrupted.'));
+        };
+        
+        img.src = objectUrl;
+      });
+
+      // All validations passed
+      setSelectedImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      
+    } catch (validationError) {
+      setError(validationError.message);
+    }
   };
 
   const handleDragOver = (e) => {
@@ -30,7 +88,7 @@ const DiseaseDetection = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file) {
       processFile(file);
     }
   };
@@ -39,11 +97,15 @@ const DiseaseDetection = () => {
     if (!selectedImage) return;
 
     setAnalyzing(true);
+    setError(null); // Clear any previous errors
+    
     try {
       const analysisResult = await analyzeImage(selectedImage);
       setResult(analysisResult);
     } catch (error) {
       console.error('Analysis failed:', error);
+      // Display error message to user
+      setError(error.message || 'Analysis failed. Please try again.');
     } finally {
       setAnalyzing(false);
     }
@@ -53,6 +115,7 @@ const DiseaseDetection = () => {
     setSelectedImage(null);
     setPreviewUrl(null);
     setResult(null);
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -85,6 +148,23 @@ const DiseaseDetection = () => {
         <Card className="h-full">
           <h3 className="text-xl font-bold text-slate-800 mb-6">Image Upload</h3>
           
+          {/* Error Display */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-red-800 font-medium mb-1">Upload Failed</p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+              <button 
+                onClick={() => setError(null)} 
+                className="text-red-400 hover:text-red-600 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          
           {!previewUrl ? (
             <div 
               className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center hover:border-primary-500 hover:bg-slate-50 transition-all cursor-pointer"
@@ -97,7 +177,7 @@ const DiseaseDetection = () => {
                 Drag & Drop or Click to Upload
               </p>
               <p className="text-slate-500 text-sm">
-                Supports JPG, PNG (Max 5MB)
+                Supports JPEG, PNG, WebP • Max 5MB • Min 100x100px
               </p>
               <input 
                 type="file" 

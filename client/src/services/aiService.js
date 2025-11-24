@@ -1,4 +1,5 @@
 // Simulated AI Service for Disease Detection
+import { detectPlantContent } from '../utils/plantDetection';
 
 const DISEASES = {
   'tomato_blight': {
@@ -62,7 +63,16 @@ const DISEASES = {
 
 const RANDOM_DISEASES = Object.values(DISEASES).filter(d => d.name !== 'Healthy Plant');
 
-export const analyzeImage = (file) => {
+export const analyzeImage = async (file) => {
+  // Step 1: Validate that the image contains plant matter
+  try {
+    await detectPlantContent(file);
+  } catch (error) {
+    // Re-throw plant detection errors with context
+    throw error;
+  }
+
+  // Step 2: Proceed with disease analysis (simulated)
   return new Promise((resolve) => {
     setTimeout(() => {
       const fileName = file.name.toLowerCase();

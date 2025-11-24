@@ -17,7 +17,10 @@ const Profile = () => {
     name: '',
     email: '',
     phone: '',
+    avatar: null,
   });
+
+  const [preview, setPreview] = useState(null);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -31,15 +34,25 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
+        avatar: user.avatar || null,
       });
+      if (user.avatar) {
+        setPreview(`${API_URL}${user.avatar}`);
+      }
     }
   }, [user]);
 
   const handleProfileChange = (e) => {
-    setProfileData({
-      ...profileData,
-      [e.target.name]: e.target.value,
-    });
+    if (e.target.name === 'avatar') {
+      const file = e.target.files[0];
+      setProfileData({ ...profileData, avatar: file });
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setProfileData({
+        ...profileData,
+        [e.target.name]: e.target.value,
+      });
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -56,9 +69,22 @@ const Profile = () => {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append('name', profileData.name);
+      formData.append('email', profileData.email);
+      formData.append('phone', profileData.phone);
+      if (profileData.avatar instanceof File) {
+        formData.append('avatar', profileData.avatar);
+      }
+
       const response = await axios.put(
         `${API_URL}/api/auth/profile`,
-        profileData
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
 
       // Update local user data
@@ -114,8 +140,22 @@ const Profile = () => {
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-full w-32 h-32 flex items-center justify-center shadow-inner border-4 border-white/20">
-            <span className="text-6xl">👤</span>
+          <div className="bg-white/10 backdrop-blur-md rounded-full w-32 h-32 flex items-center justify-center shadow-inner border-4 border-white/20 overflow-hidden relative group">
+            {preview ? (
+              <img src={preview} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-6xl">👤</span>
+            )}
+            <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <span className="text-white text-sm font-medium">Change</span>
+              <input
+                type="file"
+                name="avatar"
+                accept="image/*"
+                onChange={handleProfileChange}
+                className="hidden"
+              />
+            </label>
           </div>
           
           <div className="flex-1 text-center md:text-left">

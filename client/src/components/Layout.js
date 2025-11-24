@@ -28,7 +28,9 @@ const Layout = ({ children }) => {
     { path: '/finance', label: 'Finance', icon: '💰' },
     { path: '/inventory', label: 'Inventory', icon: '📦' },
     { path: '/map', label: 'Field Map', icon: '🗺️' },
+    { path: '/help', label: 'Help', icon: '❓' },
   ];
+
 
   if (user?.role === 'admin') {
     navItems.push({ path: '/admin/users', label: 'Users', icon: '👥' });
@@ -78,7 +80,7 @@ const Layout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-2 overflow-y-auto min-h-0 custom-scrollbar">
             {navItems.map((item) => (
               <Link
                 key={item.path}

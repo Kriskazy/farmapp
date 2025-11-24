@@ -7,7 +7,7 @@ import Card from '../components/common/Card';
 import Input from '../components/common/Input';
 
 const Livestock = () => {
-  const { } = useAuth();
+  // const { user } = useAuth();
   const [livestock, setLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

@@ -20,6 +20,10 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ message: 'Not authorized, user not found' });
       }
 
+      if (!req.user.isActive) {
+        return res.status(403).json({ message: 'Account is inactive. Please contact administrator.' });
+      }
+
       next();
     } catch (error) {
       console.error('Token verification failed:', error);

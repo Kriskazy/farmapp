@@ -4,6 +4,7 @@ const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
 const { protect } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -77,11 +78,18 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (user && (await user.comparePassword(password))) {
+      if (!user.isActive) {
+        return res.status(401).json({ message: 'Account is inactive. Please contact administrator.' });
+      }
+
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        isActive: user.isActive,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
         token: generateToken(user._id),
       });
     } else {
@@ -93,25 +101,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @desc    Get current user profile
-// @route   GET /api/auth/profile
-// @access  Private
-router.get('/profile', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      createdAt: user.createdAt,
-    });
-  } catch (error) {
-    console.error('Profile error:', error);
-    res.status(500).json({ message: 'Server error getting profile' });
-  }
-});
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
@@ -296,7 +285,9 @@ router.get('/profile', protect, async (req, res) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
+      role: user.role,
       isActive: user.isActive,
+      avatar: user.avatar,
       createdAt: user.createdAt,
     });
   } catch (error) {
@@ -308,7 +299,9 @@ router.get('/profile', protect, async (req, res) => {
 // @desc    Update user profile
 // @route   PUT /api/auth/profile
 // @access  Private
-router.put('/profile', protect, async (req, res) => {
+// @route   PUT /api/auth/profile
+// @access  Private
+router.put('/profile', protect, upload.single('avatar'), async (req, res) => {
   try {
     const { name, email, phone } = req.body;
 
@@ -331,6 +324,10 @@ router.put('/profile', protect, async (req, res) => {
     user.name = name || user.name;
     user.email = email || user.email;
     user.phone = phone !== undefined ? phone : user.phone;
+    
+    if (req.file) {
+      user.avatar = `/uploads/${req.file.filename}`;
+    }
 
     await user.save();
 
@@ -342,7 +339,9 @@ router.put('/profile', protect, async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        role: user.role,
         isActive: user.isActive,
+        avatar: user.avatar,
       },
     });
   } catch (error) {

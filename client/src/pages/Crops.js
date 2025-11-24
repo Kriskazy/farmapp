@@ -5,9 +5,22 @@ import { API_URL } from '../config';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
 import Input from '../components/common/Input';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 
 const Crops = () => {
-  const { } = useAuth();
+  // const { user } = useAuth();
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -188,6 +201,59 @@ const Crops = () => {
           <Card className="bg-white border-l-4 border-l-slate-500">
             <p className="text-slate-500 text-sm font-medium">Harvested</p>
             <p className="text-2xl font-bold text-slate-800">{stats.harvestedCrops}</p>
+          </Card>
+        </div>
+      )}
+
+      {/* Charts Section */}
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Area Distribution</h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stats.areaBreakdown.map(item => ({ name: item._id, value: item.totalArea }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {stats.areaBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#0088FE', '#00C49F', '#FFBB28', '#FF8042'][index % 4]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card>
+            <h3 className="text-lg font-bold text-slate-800 mb-6">Crop Status</h3>
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={[
+                    { name: 'Planted', count: stats.plantedCrops },
+                    { name: 'Growing', count: stats.growingCrops },
+                    { name: 'Ready', count: stats.readyCrops },
+                    { name: 'Harvested', count: stats.harvestedCrops },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#64748b" />
+                  <YAxis stroke="#64748b" />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </Card>
         </div>
       )}

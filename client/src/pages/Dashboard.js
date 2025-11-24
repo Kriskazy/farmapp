@@ -5,6 +5,18 @@ import axios from 'axios';
 import { API_URL } from '../config';
 import Card from '../components/common/Card';
 import WeatherWidget from '../components/dashboard/WeatherWidget';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from 'recharts';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -103,6 +115,66 @@ const Dashboard = () => {
       {/* Weather Widget */}
       <div className="mb-8 h-96">
         <WeatherWidget />
+      </div>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">
+            Weekly Task Completion
+          </h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dashboardData?.weeklyTaskData || []}>
+                <defs>
+                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="_id" stroke="#64748b" />
+                <YAxis stroke="#64748b" />
+                <Tooltip />
+                <Area type="monotone" dataKey="count" stroke="#3b82f6" fillOpacity={1} fill="url(#colorCount)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">
+            Crop Status Distribution
+          </h3>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Planted', value: dashboardData?.cropStats?.planted || 0 },
+                    { name: 'Growing', value: dashboardData?.cropStats?.growing || 0 },
+                    { name: 'Ready', value: dashboardData?.cropStats?.ready || 0 },
+                    { name: 'Harvested', value: dashboardData?.cropStats?.harvested || 0 },
+                  ].filter(d => d.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  paddingAngle={5}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  <Cell fill="#3b82f6" />
+                  <Cell fill="#10b981" />
+                  <Cell fill="#f59e0b" />
+                  <Cell fill="#64748b" />
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
       </div>
 
       {/* Stats Grid */}
