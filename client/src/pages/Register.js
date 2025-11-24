@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_URL } from '../config';
+import { useAuth } from '../context/AuthContext';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -12,256 +13,139 @@ const Register = () => {
     phone: '',
   });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { register, user, loading } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const { name, email, password, confirmPassword, phone } = formData;
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  const onChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await axios.post(`${API_URL}/api/auth/register`, {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-      });
-
-      // Show success message
-      alert('Registration successful! Please wait for admin approval.');
-      navigate('/login');
-    } catch (error) {
-      const errorMsg = error.response?.data?.message || 'Registration failed';
-      setError(errorMsg);
-    } finally {
-      setLoading(false);
+    const result = await register(name, email, password, phone);
+    if (!result.success) {
+      setError(result.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Logo/Header Section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Join Our Farm
-          </h1>
-          <p className="text-gray-600">
-            Register as a farm worker to get started
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 p-4">
+      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row-reverse">
+        {/* Right Side - Form */}
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+          <div className="mb-8 text-center md:text-left">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Create Account</h1>
+            <p className="text-slate-500">Join us to manage your farm efficiently.</p>
+          </div>
 
-        {/* Register Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           {error && (
-            <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-              <div className="flex items-center">
-                <span className="text-red-500 text-xl mr-3">⚠️</span>
-                <p className="text-red-700 text-sm">{error}</p>
-              </div>
+            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r">
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name Field */}
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Full Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 outline-none"
-                placeholder="Krinkum Krankum"
-                disabled={loading}
-              />
-            </div>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <Input
+              label="Full Name"
+              type="text"
+              name="name"
+              value={name}
+              onChange={onChange}
+              placeholder="John Doe"
+              required
+            />
 
-            {/* Email Field */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 outline-none"
-                placeholder="kris@example.com"
-                disabled={loading}
-              />
-            </div>
+            <Input
+              label="Email Address"
+              type="email"
+              name="email"
+              value={email}
+              onChange={onChange}
+              placeholder="name@farm.com"
+              required
+            />
 
-            {/* Phone Field */}
-            <div>
-              <label
-                htmlFor="phone"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Phone Number <span className="text-gray-400">(Optional)</span>
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 outline-none"
-                placeholder="+234 123 456 7890"
-                disabled={loading}
-              />
-            </div>
+            <Input
+              label="Phone Number"
+              type="text"
+              name="phone"
+              value={phone}
+              onChange={onChange}
+              placeholder="+1 234 567 8900"
+            />
 
-            {/* Password Field */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Password
-              </label>
-              <input
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Password"
                 type="password"
-                id="password"
                 name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 outline-none"
+                value={password}
+                onChange={onChange}
                 placeholder="••••••••"
-                disabled={loading}
+                required
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Must be at least 6 characters
-              </p>
-            </div>
 
-            {/* Confirm Password Field */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
+              <Input
+                label="Confirm Password"
                 type="password"
-                id="confirmPassword"
                 name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 outline-none"
+                value={confirmPassword}
+                onChange={onChange}
                 placeholder="••••••••"
-                disabled={loading}
+                required
               />
             </div>
 
-            {/* Info Message */}
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-              <div className="flex items-start">
-                <span className="text-blue-500 text-xl mr-3">ℹ️</span>
-                <p className="text-blue-700 text-sm">
-                  Your account will need to be approved by an administrator
-                  before you can log in.
-                </p>
-              </div>
-            </div>
-
-            {/* Submit Button */}
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] transition-all duration-200 shadow-lg"
+              variant="primary"
+              className="w-full mt-4"
+              isLoading={loading}
             >
-              {loading ? (
-                <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Creating Account...
-                </span>
-              ) : (
-                'Create Account'
-              )}
-            </button>
+              Sign Up
+            </Button>
           </form>
 
-          {/* Divider */}
-          <div className="mt-6 flex items-center">
-            <div className="flex-1 border-t border-gray-300"></div>
-            <span className="px-4 text-sm text-gray-500">or</span>
-            <div className="flex-1 border-t border-gray-300"></div>
-          </div>
-
-          {/* Login Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link
-                to="/login"
-                className="text-green-600 hover:text-green-700 font-medium transition-colors"
-              >
-                Sign in here
-              </Link>
-            </p>
+          <div className="mt-8 text-center text-sm text-slate-500">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="text-primary-600 hover:text-primary-700 font-bold"
+            >
+              Sign in
+            </Link>
           </div>
         </div>
 
-        {/* Footer Note */}
-        <p className="mt-8 text-center text-sm text-gray-500">
-          By registering, you agree to our Terms of Service and Privacy Policy
-        </p>
+        {/* Left Side - Image/Decorative */}
+        <div className="hidden md:block w-1/2 bg-secondary-600 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-secondary-600 to-secondary-900 opacity-90 z-10"></div>
+          <img
+            src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+            alt="Wheat field"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="relative z-20 h-full flex flex-col justify-center p-12 text-white">
+            <h2 className="text-4xl font-bold mb-6">Grow Your Business</h2>
+            <p className="text-secondary-100 text-lg leading-relaxed">
+              Track your harvest, monitor livestock health, and optimize your farm's productivity with data-driven insights.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

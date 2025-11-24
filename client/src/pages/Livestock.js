@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import './Pages.css';
 import { API_URL } from '../config';
+import Button from '../components/common/Button';
+import Card from '../components/common/Card';
+import Input from '../components/common/Input';
 
 const Livestock = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const [livestock, setLivestock] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -32,12 +34,7 @@ const Livestock = () => {
     notes: '',
   });
 
-  useEffect(() => {
-    fetchLivestock();
-    fetchStats();
-  }, [filters]);
-
-  const fetchLivestock = async () => {
+  const fetchLivestock = useCallback(async () => {
     try {
       const queryParams = new URLSearchParams();
       if (filters.type) queryParams.append('type', filters.type);
@@ -54,9 +51,9 @@ const Livestock = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await axios.get(
         `${API_URL}/api/livestock/stats/overview`
@@ -65,7 +62,12 @@ const Livestock = () => {
     } catch (error) {
       console.error('Error fetching livestock stats:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLivestock();
+    fetchStats();
+  }, [fetchLivestock, fetchStats]);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -87,19 +89,16 @@ const Livestock = () => {
 
     try {
       if (editingLivestock) {
-        // Update existing livestock
         await axios.put(
           `${API_URL}/api/livestock/${editingLivestock._id}`,
           formData
         );
         setMessage('Animal updated successfully');
       } else {
-        // Create new livestock
         await axios.post(`${API_URL}/api/livestock`, formData);
         setMessage('Animal added successfully');
       }
 
-      // Reset form and refresh data
       resetForm();
       fetchLivestock();
       fetchStats();
@@ -160,18 +159,15 @@ const Livestock = () => {
     setShowForm(false);
   };
 
-  const getHealthBadge = (status) => {
-    const statusColors = {
-      healthy: 'health-healthy',
-      sick: 'health-sick',
-      injured: 'health-injured',
-      quarantine: 'health-quarantine',
-      deceased: 'health-deceased',
+  const getHealthColor = (status) => {
+    const colors = {
+      healthy: 'bg-green-100 text-green-700',
+      sick: 'bg-red-100 text-red-700',
+      injured: 'bg-orange-100 text-orange-700',
+      quarantine: 'bg-yellow-100 text-yellow-700',
+      deceased: 'bg-slate-200 text-slate-600',
     };
-
-    return (
-      <span className={`health-badge ${statusColors[status]}`}>{status}</span>
-    );
+    return colors[status] || 'bg-slate-100 text-slate-700';
   };
 
   const getAnimalIcon = (type) => {
@@ -200,142 +196,136 @@ const Livestock = () => {
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading">Loading livestock...</div>
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="livestock-header">
-        <h1>🐄 Livestock Management</h1>
-        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Livestock Management</h1>
+          <p className="text-slate-500">Monitor health and track your herd</p>
+        </div>
+        <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Add New Animal'}
-        </button>
+        </Button>
       </div>
 
       {message && (
-        <div
-          className={
-            message.includes('Error') ? 'error-message' : 'success-message'
-          }
-        >
+        <div className={`p-4 rounded-xl ${message.includes('Error') ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
           {message}
         </div>
       )}
 
-      {/* Livestock Statistics */}
+      {/* Stats Overview */}
       {stats && (
-        <div className="livestock-stats">
-          <div className="stat-card">
-            <h3>Total Animals</h3>
-            <div className="stat-number">{stats.totalLivestock}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Healthy</h3>
-            <div className="stat-number">{stats.healthyAnimals}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Need Attention</h3>
-            <div className="stat-number">{stats.sickAnimals}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Types</h3>
-            <div className="stat-detail">
-              {stats.typeBreakdown.map((type) => (
-                <div key={type._id}>
-                  {getAnimalIcon(type._id)} {type._id}: {type.count}
-                </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white border-l-4 border-l-blue-500">
+            <p className="text-slate-500 text-sm font-medium">Total Animals</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.totalLivestock}</p>
+          </Card>
+          <Card className="bg-white border-l-4 border-l-green-500">
+            <p className="text-slate-500 text-sm font-medium">Healthy</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.healthyAnimals}</p>
+          </Card>
+          <Card className="bg-white border-l-4 border-l-red-500">
+            <p className="text-slate-500 text-sm font-medium">Need Attention</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.sickAnimals}</p>
+          </Card>
+          <Card className="bg-white border-l-4 border-l-purple-500">
+            <p className="text-slate-500 text-sm font-medium">Types</p>
+            <div className="flex gap-2 mt-1 overflow-x-auto">
+              {stats.typeBreakdown.slice(0, 3).map((type) => (
+                <span key={type._id} className="text-xs bg-slate-100 px-2 py-1 rounded-full whitespace-nowrap">
+                  {getAnimalIcon(type._id)} {type.count}
+                </span>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Filters */}
-      <div className="livestock-filters">
-        <div className="filter-group">
-          <label>Filter by Type:</label>
-          <select
-            name="type"
-            value={filters.type}
-            onChange={handleFilterChange}
-          >
-            <option value="">All Types</option>
-            <option value="cattle">Cattle</option>
-            <option value="sheep">Sheep</option>
-            <option value="goat">Goat</option>
-            <option value="pig">Pig</option>
-            <option value="chicken">Chicken</option>
-            <option value="duck">Duck</option>
-            <option value="horse">Horse</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Filter by Health:</label>
-          <select
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-          >
-            <option value="">All Status</option>
-            <option value="healthy">Healthy</option>
-            <option value="sick">Sick</option>
-            <option value="injured">Injured</option>
-            <option value="quarantine">Quarantine</option>
-          </select>
-        </div>
-        <div className="filter-group">
-          <label>Filter by Location:</label>
-          <input
-            type="text"
+      <Card className="bg-slate-50 border border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Filter by Type</label>
+            <select
+              name="type"
+              value={filters.type}
+              onChange={handleFilterChange}
+              className="input-field"
+            >
+              <option value="">All Types</option>
+              <option value="cattle">Cattle</option>
+              <option value="sheep">Sheep</option>
+              <option value="goat">Goat</option>
+              <option value="pig">Pig</option>
+              <option value="chicken">Chicken</option>
+              <option value="duck">Duck</option>
+              <option value="horse">Horse</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Filter by Health</label>
+            <select
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="input-field"
+            >
+              <option value="">All Status</option>
+              <option value="healthy">Healthy</option>
+              <option value="sick">Sick</option>
+              <option value="injured">Injured</option>
+              <option value="quarantine">Quarantine</option>
+            </select>
+          </div>
+          <Input
+            label="Filter by Location"
             name="location"
             value={filters.location}
             onChange={handleFilterChange}
-            placeholder="Enter location..."
+            placeholder="Search location..."
           />
         </div>
-      </div>
+      </Card>
 
-      {/* Add/Edit Livestock Form */}
+      {/* Form */}
       {showForm && (
-        <div className="livestock-form-container">
-          <h3>{editingLivestock ? 'Edit Animal' : 'Add New Animal'}</h3>
-          <form onSubmit={handleSubmit} className="livestock-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Tag Number *</label>
-                <input
-                  type="text"
-                  name="tagNumber"
-                  value={formData.tagNumber}
-                  onChange={handleInputChange}
-                  placeholder="e.g., C001, S042"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Animal name (optional)"
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Type *</label>
+        <Card className="border-t-4 border-t-primary-500">
+          <h3 className="text-xl font-bold text-slate-800 mb-6">{editingLivestock ? 'Edit Animal' : 'Add New Animal'}</h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Tag Number *"
+                name="tagNumber"
+                value={formData.tagNumber}
+                onChange={handleInputChange}
+                placeholder="e.g., C001"
+                required
+              />
+              <Input
+                label="Name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Animal name (optional)"
+              />
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Type *</label>
                 <select
                   name="type"
                   value={formData.type}
                   onChange={handleInputChange}
                   required
+                  className="input-field"
                 >
                   <option value="cattle">Cattle</option>
                   <option value="sheep">Sheep</option>
@@ -347,71 +337,70 @@ const Livestock = () => {
                   <option value="other">Other</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Gender *</label>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Gender *</label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleInputChange}
                   required
+                  className="input-field"
                 >
                   <option value="female">Female</option>
                   <option value="male">Male</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Breed</label>
-                <input
-                  type="text"
-                  name="breed"
-                  value={formData.breed}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Holstein, Angus"
-                />
-              </div>
-              <div className="form-group">
-                <label>Birth Date</label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={formData.birthDate}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
+              <Input
+                label="Breed"
+                name="breed"
+                value={formData.breed}
+                onChange={handleInputChange}
+                placeholder="e.g., Holstein"
+              />
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Weight</label>
-                <div className="weight-input">
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleInputChange}
-                    placeholder="0"
-                    step="0.1"
-                    min="0"
-                  />
+              <Input
+                label="Birth Date"
+                type="date"
+                name="birthDate"
+                value={formData.birthDate}
+                onChange={handleInputChange}
+              />
+
+              <div className="flex gap-4">
+                <Input
+                  label="Weight"
+                  type="number"
+                  name="weight"
+                  value={formData.weight}
+                  onChange={handleInputChange}
+                  placeholder="0"
+                  step="0.1"
+                  min="0"
+                  className="flex-1"
+                />
+                <div className="w-1/3">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Unit</label>
                   <select
                     name="weightUnit"
                     value={formData.weightUnit}
                     onChange={handleInputChange}
+                    className="input-field"
                   >
                     <option value="kg">kg</option>
                     <option value="lbs">lbs</option>
                   </select>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Health Status</label>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Health Status</label>
                 <select
                   name="healthStatus"
                   value={formData.healthStatus}
                   onChange={handleInputChange}
+                  className="input-field"
                 >
                   <option value="healthy">Healthy</option>
                   <option value="sick">Sick</option>
@@ -419,114 +408,97 @@ const Livestock = () => {
                   <option value="quarantine">Quarantine</option>
                 </select>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
+              <Input
+                label="Location"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                placeholder="e.g., Pasture A, Barn 2, Pen 15"
+                placeholder="e.g., Barn 1"
               />
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">Notes</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  rows="3"
+                  className="input-field"
+                  placeholder="Additional notes..."
+                />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Any additional notes about this animal..."
-                rows="3"
-              />
-            </div>
-
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
-                {editingLivestock ? 'Update Animal' : 'Add Animal'}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="btn-secondary"
-              >
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button type="button" variant="ghost" onClick={resetForm}>
                 Cancel
-              </button>
+              </Button>
+              <Button type="submit">
+                {editingLivestock ? 'Update Animal' : 'Add Animal'}
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
-      {/* Livestock List */}
-      <div className="livestock-list">
-        {livestock.length === 0 ? (
-          <div className="content-placeholder">
-            <p>No animals added yet. Click "Add New Animal" to get started!</p>
-          </div>
-        ) : (
-          <div className="livestock-grid">
-            {livestock.map((animal) => (
-              <div key={animal._id} className="livestock-card">
-                <div className="livestock-header">
-                  <div className="animal-title">
-                    <span className="animal-icon">
-                      {getAnimalIcon(animal.type)}
-                    </span>
-                    <h3>{animal.name || animal.tagNumber}</h3>
-                  </div>
-                  {getHealthBadge(animal.healthStatus)}
-                </div>
-
-                <div className="livestock-details">
-                  <p>
-                    <strong>Age:</strong> {calculateAge(animal.birthDate)}
-                  </p>
-                  {animal.weight && (
-                    <p>
-                      <strong>Weight:</strong> {animal.weight}{' '}
-                      {animal.weightUnit}
-                    </p>
-                  )}
-                  {animal.location && (
-                    <p>
-                      <strong>Location:</strong> {animal.location}
-                    </p>
-                  )}
-                </div>
-
-                {animal.notes && (
-                  <div className="livestock-notes">
-                    <p>
-                      <strong>Notes:</strong> {animal.notes}
-                    </p>
-                  </div>
-                )}
-
-                <div className="livestock-meta">
-                  <p>Added by: {animal.createdBy?.name || 'Unknown'}</p>
-                  <p>
-                    Created: {new Date(animal.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className="livestock-actions">
-                  <button
-                    onClick={() => handleEdit(animal)}
-                    className="btn-small btn-secondary"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(animal._id, animal.tagNumber)}
-                    className="btn-small btn-danger"
-                  >
-                    Delete
-                  </button>
+      {/* Livestock Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {livestock.map((animal) => (
+          <Card key={animal._id} hover className="flex flex-col h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl bg-slate-100 p-2 rounded-xl">{getAnimalIcon(animal.type)}</span>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">{animal.name || animal.tagNumber}</h3>
+                  <p className="text-sm text-slate-500 font-mono">{animal.tagNumber}</p>
                 </div>
               </div>
-            ))}
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getHealthColor(animal.healthStatus)}`}>
+                {animal.healthStatus}
+              </span>
+            </div>
+
+            <div className="space-y-2 text-sm text-slate-600 flex-grow">
+              <div className="flex justify-between">
+                <span>🎂 Age:</span>
+                <span className="font-medium">{calculateAge(animal.birthDate)}</span>
+              </div>
+              {animal.breed && (
+                <div className="flex justify-between">
+                  <span>🧬 Breed:</span>
+                  <span className="font-medium">{animal.breed}</span>
+                </div>
+              )}
+              {animal.weight && (
+                <div className="flex justify-between">
+                  <span>⚖️ Weight:</span>
+                  <span className="font-medium">{animal.weight} {animal.weightUnit}</span>
+                </div>
+              )}
+              {animal.location && (
+                <div className="flex justify-between">
+                  <span>📍 Location:</span>
+                  <span className="font-medium">{animal.location}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end gap-2">
+              <Button size="sm" variant="secondary" onClick={() => handleEdit(animal)}>
+                Edit
+              </Button>
+              <Button size="sm" variant="danger" onClick={() => handleDelete(animal._id, animal.tagNumber)}>
+                Delete
+              </Button>
+            </div>
+          </Card>
+        ))}
+        
+        {livestock.length === 0 && !loading && (
+          <div className="col-span-full text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+            <div className="text-4xl mb-3">🐄</div>
+            <p className="text-slate-500 font-medium">No animals found matching your filters.</p>
           </div>
         )}
       </div>

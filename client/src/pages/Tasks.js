@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import './Pages.css';
 import { API_URL } from '../config';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
 
 const Tasks = () => {
   const { user } = useAuth();
@@ -70,7 +72,6 @@ const Tasks = () => {
   const fetchWorkers = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/api/tasks/workers`);
-      console.log('Workers loaded:', response.data);
       setWorkers(response.data);
     } catch (error) {
       console.error('Error fetching workers:', error);
@@ -104,20 +105,16 @@ const Tasks = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
-    console.log('Form data being sent:', formData);
 
     try {
       if (editingTask) {
-        // Update existing task
         await axios.put(`${API_URL}/api/tasks/${editingTask._id}`, formData);
         setMessage('Task updated successfully');
       } else {
-        // Create new task (admin only)
         await axios.post(`${API_URL}/api/tasks`, formData);
         setMessage('Task created successfully');
       }
 
-      // Reset form and refresh data
       resetForm();
       fetchTasks();
       fetchStats();
@@ -161,9 +158,7 @@ const Tasks = () => {
 
   const handleStatusUpdate = async (taskId, newStatus) => {
     try {
-      await axios.put(`${API_URL}/api/tasks/${taskId}`, {
-        status: newStatus,
-      });
+      await axios.put(`${API_URL}/api/tasks/${taskId}`, { status: newStatus });
       setMessage(`Task status updated to ${newStatus}`);
       fetchTasks();
       fetchStats();
@@ -191,32 +186,24 @@ const Tasks = () => {
     setShowForm(false);
   };
 
-  const getPriorityBadge = (priority) => {
-    const priorityColors = {
-      low: 'priority-low',
-      medium: 'priority-medium',
-      high: 'priority-high',
-      urgent: 'priority-urgent',
+  const getPriorityColor = (priority) => {
+    const colors = {
+      low: 'bg-green-100 text-green-700 border-green-200',
+      medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      high: 'bg-orange-100 text-orange-700 border-orange-200',
+      urgent: 'bg-red-100 text-red-700 border-red-200 animate-pulse',
     };
-
-    return (
-      <span className={`priority-badge ${priorityColors[priority]}`}>
-        {priority}
-      </span>
-    );
+    return colors[priority] || 'bg-slate-100 text-slate-700 border-slate-200';
   };
 
-  const getStatusBadge = (status) => {
-    const statusColors = {
-      pending: 'status-pending',
-      'in-progress': 'status-progress',
-      completed: 'status-completed',
-      cancelled: 'status-cancelled',
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-slate-100 text-slate-700',
+      'in-progress': 'bg-blue-100 text-blue-700',
+      completed: 'bg-green-100 text-green-700',
+      cancelled: 'bg-red-100 text-red-700',
     };
-
-    return (
-      <span className={`status-badge ${statusColors[status]}`}>{status}</span>
-    );
+    return colors[status] || 'bg-slate-100 text-slate-700';
   };
 
   const getCategoryIcon = (category) => {
@@ -239,85 +226,85 @@ const Tasks = () => {
     const diffTime = date - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) {
-      return `${Math.abs(diffDays)} days overdue`;
-    } else if (diffDays === 0) {
-      return 'Due today';
-    } else if (diffDays === 1) {
-      return 'Due tomorrow';
-    } else {
-      return `Due in ${diffDays} days`;
-    }
+    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`;
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    return `Due in ${diffDays} days`;
   };
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading">Loading tasks...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="tasks-header">
-        <h1>📋 Task Management</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Task Management</h1>
+          <p className="text-slate-500 mt-1">
+            {user?.role === 'admin'
+              ? 'Manage and assign tasks to your team'
+              : 'View and update your assigned tasks'}
+          </p>
+        </div>
         {user?.role === 'admin' && (
-          <button
-            className="btn-primary"
+          <Button
             onClick={() => setShowForm(!showForm)}
+            variant={showForm ? 'secondary' : 'primary'}
           >
-            {showForm ? 'Cancel' : '+ Create New Task'}
-          </button>
+            {showForm ? 'Cancel' : '+ Create Task'}
+          </Button>
         )}
       </div>
 
+      {/* Message */}
       {message && (
         <div
-          className={
-            message.includes('Error') ? 'error-message' : 'success-message'
-          }
+          className={`p-4 rounded-xl border-l-4 ${
+            message.includes('Error')
+              ? 'bg-red-50 border-red-500 text-red-700'
+              : 'bg-green-50 border-green-500 text-green-700'
+          }`}
         >
           {message}
         </div>
       )}
 
-      {/* Task Statistics */}
+      {/* Stats Grid */}
       {stats && (
-        <div className="task-stats">
-          <div className="stat-card">
-            <h3>Total Tasks</h3>
-            <div className="stat-number">{stats.totalTasks}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Pending</h3>
-            <div className="stat-number">{stats.pendingTasks}</div>
-          </div>
-          <div className="stat-card">
-            <h3>In Progress</h3>
-            <div className="stat-number">{stats.inProgressTasks}</div>
-          </div>
-          <div className="stat-card">
-            <h3>Completed</h3>
-            <div className="stat-number">{stats.completedTasks}</div>
-          </div>
-          {stats.overdueTasks > 0 && (
-            <div className="stat-card overdue">
-              <h3>Overdue</h3>
-              <div className="stat-number">{stats.overdueTasks}</div>
-            </div>
-          )}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="border-l-4 border-l-blue-500">
+            <p className="text-slate-500 text-sm font-medium">Total Tasks</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.totalTasks}</p>
+          </Card>
+          <Card className="border-l-4 border-l-yellow-500">
+            <p className="text-slate-500 text-sm font-medium">Pending</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.pendingTasks}</p>
+          </Card>
+          <Card className="border-l-4 border-l-green-500">
+            <p className="text-slate-500 text-sm font-medium">Completed</p>
+            <p className="text-3xl font-bold text-slate-900">{stats.completedTasks}</p>
+          </Card>
+          <Card className="border-l-4 border-l-red-500">
+            <p className="text-slate-500 text-sm font-medium">Overdue</p>
+            <p className="text-3xl font-bold text-red-600">{stats.overdueTasks}</p>
+          </Card>
         </div>
       )}
 
-      {/* Task Filters */}
-      <div className="task-filters">
-        <div className="filter-group">
-          <label>Status:</label>
+      {/* Filters */}
+      <Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <select
             name="status"
             value={filters.status}
             onChange={handleFilterChange}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-slate-50"
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -325,13 +312,12 @@ const Tasks = () => {
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
           </select>
-        </div>
-        <div className="filter-group">
-          <label>Priority:</label>
+
           <select
             name="priority"
             value={filters.priority}
             onChange={handleFilterChange}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-slate-50"
           >
             <option value="">All Priorities</option>
             <option value="low">Low</option>
@@ -339,32 +325,30 @@ const Tasks = () => {
             <option value="high">High</option>
             <option value="urgent">Urgent</option>
           </select>
-        </div>
-        <div className="filter-group">
-          <label>Category:</label>
+
           <select
             name="category"
             value={filters.category}
             onChange={handleFilterChange}
+            className="px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-slate-50"
           >
             <option value="">All Categories</option>
-            <option value="crop">Crop</option>
-            <option value="livestock">Livestock</option>
-            <option value="equipment">Equipment</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="harvest">Harvest</option>
-            <option value="planting">Planting</option>
-            <option value="feeding">Feeding</option>
-            <option value="other">Other</option>
+            <option value="crop">🌱 Crop</option>
+            <option value="livestock">🐄 Livestock</option>
+            <option value="equipment">🚜 Equipment</option>
+            <option value="maintenance">🔧 Maintenance</option>
+            <option value="harvest">🌾 Harvest</option>
+            <option value="planting">🌿 Planting</option>
+            <option value="feeding">🥕 Feeding</option>
+            <option value="other">📋 Other</option>
           </select>
-        </div>
-        {user?.role === 'admin' && (
-          <div className="filter-group">
-            <label>Assigned To:</label>
+
+          {user?.role === 'admin' && (
             <select
               name="assignedTo"
               value={filters.assignedTo}
               onChange={handleFilterChange}
+              className="px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-slate-50"
             >
               <option value="">All Workers</option>
               {workers.map((worker) => (
@@ -373,45 +357,49 @@ const Tasks = () => {
                 </option>
               ))}
             </select>
-          </div>
-        )}
-        <div className="filter-group checkbox-group">
-          <label>
+          )}
+
+          <label className="flex items-center justify-center px-4 py-2 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
             <input
               type="checkbox"
               name="overdue"
               checked={filters.overdue}
               onChange={handleFilterChange}
+              className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
-            Show Overdue Only
+            <span className="text-sm font-medium text-slate-700">
+              Overdue Only
+            </span>
           </label>
         </div>
-      </div>
+      </Card>
 
-      {/* Create/Edit Task Form */}
+      {/* Create/Edit Form */}
       {showForm && user?.role === 'admin' && (
-        <div className="task-form-container">
-          <h3>{editingTask ? 'Edit Task' : 'Create New Task'}</h3>
-          <form onSubmit={handleSubmit} className="task-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Task Title *</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Water the tomato field"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Assign To *</label>
+        <Card className="border-2 border-primary-100">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">
+            {editingTask ? '✏️ Edit Task' : '➕ Create New Task'}
+          </h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Input
+                label="Task Title"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="e.g., Water the tomato field"
+                required
+              />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Assign To *
+                </label>
                 <select
                   name="assignedTo"
                   value={formData.assignedTo}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                 >
                   <option value="">Select Worker</option>
                   {workers.map((worker) => (
@@ -423,8 +411,10 @@ const Tasks = () => {
               </div>
             </div>
 
-            <div className="form-group">
-              <label>Description *</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Description *
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -432,16 +422,20 @@ const Tasks = () => {
                 placeholder="Detailed description of the task..."
                 rows="3"
                 required
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Category</label>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Category
+                </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                 >
                   <option value="other">Other</option>
                   <option value="crop">Crop</option>
@@ -453,12 +447,15 @@ const Tasks = () => {
                   <option value="feeding">Feeding</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label>Priority</label>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Priority
+                </label>
                 <select
                   name="priority"
                   value={formData.priority}
                   onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -468,227 +465,179 @@ const Tasks = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Due Date *</label>
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Estimated Hours</label>
-                <input
-                  type="number"
-                  name="estimatedHours"
-                  value={formData.estimatedHours}
-                  onChange={handleInputChange}
-                  placeholder="0.0"
-                  step="0.5"
-                  min="0.1"
-                  max="24"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
+            <div className="grid md:grid-cols-2 gap-6">
+              <Input
+                label="Due Date"
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
                 onChange={handleInputChange}
-                placeholder="e.g., North Field, Barn 2"
+                required
+              />
+              <Input
+                label="Estimated Hours"
+                type="number"
+                name="estimatedHours"
+                value={formData.estimatedHours}
+                onChange={handleInputChange}
+                placeholder="0.0"
+                step="0.5"
               />
             </div>
 
-            <div className="form-group">
-              <label>Notes</label>
+            <Input
+              label="Location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              placeholder="e.g., North Field, Barn 2"
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Notes
+              </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
                 placeholder="Any additional instructions or notes..."
                 rows="2"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
               />
             </div>
 
-            <div className="form-actions">
-              <button type="submit" className="btn-primary">
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" className="flex-1">
                 {editingTask ? 'Update Task' : 'Create Task'}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="btn-secondary"
-              >
+              </Button>
+              <Button type="button" variant="ghost" onClick={resetForm}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
-      {/* Tasks List */}
-      <div className="tasks-list">
-        {tasks.length === 0 ? (
-          <div className="content-placeholder">
-            <p>
-              {user?.role === 'admin'
-                ? 'No tasks created yet. Click "Create New Task" to get started!'
-                : 'No tasks assigned to you yet.'}
-            </p>
-          </div>
-        ) : (
-          <div className="tasks-grid">
-            {tasks.map((task) => (
-              <div
-                key={task._id}
-                className={`task-card ${task.isOverdue ? 'overdue' : ''}`}
-              >
-                <div className="task-header">
-                  <div className="task-title-section">
-                    <span className="task-icon">
-                      {getCategoryIcon(task.category)}
-                    </span>
-                    <h3>{task.title}</h3>
-                  </div>
-                  <div className="task-badges">
-                    {getPriorityBadge(task.priority)}
-                    {getStatusBadge(task.status)}
-                  </div>
-                </div>
-
-                <div className="task-description">
-                  <p>{task.description}</p>
-                </div>
-
-                <div className="task-details">
-                  <p>
-                    <strong>Due:</strong>{' '}
-                    <span className={task.isOverdue ? 'overdue-text' : ''}>
-                      {formatDate(task.dueDate)}
-                    </span>
-                  </p>
-                  {user?.role === 'admin' && (
-                    <p>
-                      <strong>Assigned to:</strong>{' '}
-                      {task.assignedTo?.name || 'Unassigned'}
-                    </p>
-                  )}
-                  <p>
-                    <strong>Category:</strong> {task.category}
-                  </p>
-                  {task.location && (
-                    <p>
-                      <strong>Location:</strong> {task.location}
-                    </p>
-                  )}
-                  {task.estimatedHours && (
-                    <p>
-                      <strong>Est. Hours:</strong> {task.estimatedHours}h
-                    </p>
-                  )}
-                  {task.actualHours && (
-                    <p>
-                      <strong>Actual Hours:</strong> {task.actualHours}h
-                    </p>
-                  )}
-                </div>
-
-                {task.notes && (
-                  <div className="task-notes">
-                    <p>
-                      <strong>Notes:</strong> {task.notes}
+      {/* Tasks Grid */}
+      {tasks.length === 0 ? (
+        <Card className="text-center py-12 border-dashed">
+          <div className="text-6xl mb-4">📭</div>
+          <p className="text-slate-500 text-lg">
+            {user?.role === 'admin'
+              ? 'No tasks created yet. Click "Create Task" to get started!'
+              : 'No tasks assigned to you yet.'}
+          </p>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tasks.map((task) => (
+            <Card 
+              key={task._id} 
+              className={`hover:shadow-xl transition-all duration-300 ${task.isOverdue ? 'ring-2 ring-red-100' : ''}`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl bg-slate-50 p-2 rounded-lg">
+                    {getCategoryIcon(task.category)}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 line-clamp-1">
+                      {task.title}
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      {new Date(task.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                )}
-
-                {task.workerNotes && (
-                  <div className="task-worker-notes">
-                    <p>
-                      <strong>Worker Notes:</strong> {task.workerNotes}
-                    </p>
-                  </div>
-                )}
-
-                <div className="task-meta">
-                  <p>Created by: {task.createdBy?.name || 'Unknown'}</p>
-                  <p>
-                    Created: {new Date(task.createdAt).toLocaleDateString()}
-                  </p>
-                  {task.completedAt && (
-                    <p>
-                      Completed:{' '}
-                      {new Date(task.completedAt).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-
-                <div className="task-actions">
-                  {/* Status update buttons for workers */}
-                  {task.assignedTo?._id === user._id &&
-                    task.status !== 'completed' && (
-                      <div className="status-buttons">
-                        {task.status === 'pending' && (
-                          <button
-                            onClick={() =>
-                              handleStatusUpdate(task._id, 'in-progress')
-                            }
-                            className="btn-small btn-primary"
-                          >
-                            Start Task
-                          </button>
-                        )}
-                        {task.status === 'in-progress' && (
-                          <button
-                            onClick={() =>
-                              handleStatusUpdate(task._id, 'completed')
-                            }
-                            className="btn-small btn-success"
-                          >
-                            Complete
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                  {/* Admin actions */}
-                  {user?.role === 'admin' && (
-                    <div className="admin-actions">
-                      <button
-                        onClick={() => handleEdit(task)}
-                        className="btn-small btn-secondary"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(task._id, task.title)}
-                        className="btn-small btn-danger"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Worker edit for status/notes */}
-                  {task.assignedTo?._id === user._id && (
-                    <button
-                      onClick={() => handleEdit(task)}
-                      className="btn-small btn-secondary"
-                    >
-                      Update
-                    </button>
-                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              <p className="text-slate-600 mb-4 line-clamp-2 text-sm">
+                {task.description}
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getPriorityColor(task.priority)}`}>
+                  {task.priority}
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(task.status)}`}>
+                  {task.status}
+                </span>
+              </div>
+
+              <div className="space-y-2 text-sm text-slate-600 mb-4 bg-slate-50 p-3 rounded-lg">
+                <p className={`flex items-center gap-2 ${task.isOverdue ? 'text-red-600 font-semibold' : ''}`}>
+                  <span>📅</span> {formatDate(task.dueDate)}
+                </p>
+                {user?.role === 'admin' && (
+                  <p className="flex items-center gap-2">
+                    <span>👤</span> {task.assignedTo?.name || 'Unassigned'}
+                  </p>
+                )}
+                {task.location && (
+                  <p className="flex items-center gap-2">
+                    <span>📍</span> {task.location}
+                  </p>
+                )}
+              </div>
+
+              {task.notes && (
+                <div className="bg-blue-50 p-3 rounded-lg mb-4 text-xs text-blue-800">
+                  <p className="font-semibold mb-1">Notes:</p>
+                  <p>{task.notes}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-auto pt-2 border-t border-slate-100">
+                {task.assignedTo?._id === user._id && task.status !== 'completed' && (
+                  <>
+                    {task.status === 'pending' && (
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleStatusUpdate(task._id, 'in-progress')}
+                      >
+                        Start
+                      </Button>
+                    )}
+                    {task.status === 'in-progress' && (
+                      <Button
+                        size="sm"
+                        variant="success"
+                        className="flex-1"
+                        onClick={() => handleStatusUpdate(task._id, 'completed')}
+                      >
+                        Complete
+                      </Button>
+                    )}
+                  </>
+                )}
+
+                {user?.role === 'admin' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => handleEdit(task)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      className="flex-1"
+                      onClick={() => handleDelete(task._id, task.title)}
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

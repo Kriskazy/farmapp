@@ -14,6 +14,20 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on app start
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/auth/profile`);
+        setUser(response.data);
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const token = localStorage.getItem('token');
     if (token) {
       // Set default header for all requests
@@ -25,18 +39,6 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/auth/profile`);
-      setUser(response.data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (email, password) => {
     try {

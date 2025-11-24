@@ -21,6 +21,9 @@ app.use('/api/crops', require('./routes/crops'));
 app.use('/api/livestock', require('./routes/livestock'));
 app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/finance', require('./routes/finance'));
+app.use('/api/inventory', require('./routes/inventory'));
+app.use('/api/fields', require('./routes/fields'));
 
 // Basic test route
 app.get('/api/test', (req, res) => {

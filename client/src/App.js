@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,28 +15,38 @@ import Tasks from './pages/Tasks';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
+import DiseaseDetection from './pages/DiseaseDetection';
+import Finance from './pages/Finance';
+import Inventory from './pages/Inventory';
+import FieldMap from './pages/FieldMap';
 
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-
-          <main className="flex-grow">
+      <ThemeProvider>
+        <Router>
+          <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/reset-password/:resettoken"
+                element={<ResetPassword />}
+              />
 
-              {/* Protected Routes */}
+              {/* Protected Routes with Layout */}
               <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <Layout>
+                      <Dashboard />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -45,7 +55,9 @@ function App() {
                 path="/crops"
                 element={
                   <ProtectedRoute>
-                    <Crops />
+                    <Layout>
+                      <Crops />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -54,33 +66,72 @@ function App() {
                 path="/livestock"
                 element={
                   <ProtectedRoute>
-                    <Livestock />
+                    <Layout>
+                      <Livestock />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
 
+              <Route
+                path="/disease-detection"
+                element={
+                  <ProtectedRoute>
+                    <DiseaseDetection />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/tasks"
                 element={
                   <ProtectedRoute>
-                    <Tasks />
+                    <Layout>
+                      <Tasks />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
 
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-
               <Route
-                path="/reset-password/:resettoken"
-                element={<ResetPassword />}
+                path="/finance"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Finance />
+                    </Layout>
+                  </ProtectedRoute>
+                }
               />
 
-              {/* Admin Only Routes */}
+              <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Inventory />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/map"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <FieldMap />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/admin/users"
                 element={
                   <ProtectedRoute adminOnly={true}>
-                    <AdminUsers />
+                    <Layout>
+                      <AdminUsers />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
@@ -89,16 +140,16 @@ function App() {
                 path="/profile"
                 element={
                   <ProtectedRoute>
-                    <Profile />
+                    <Layout>
+                      <Profile />
+                    </Layout>
                   </ProtectedRoute>
                 }
               />
             </Routes>
-          </main>
-
-          <Footer />
-        </div>
-      </Router>
+          </div>
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

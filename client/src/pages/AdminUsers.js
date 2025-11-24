@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
-import './Pages.css';
 import { API_URL } from '../config';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
 
 const AdminUsers = () => {
   const { user } = useAuth();
@@ -54,102 +55,114 @@ const AdminUsers = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="page-container">
-        <div className="error-message">Access denied. Admin only.</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-red-500 font-bold text-xl">Access denied. Admin only.</div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="page-container">
-        <div className="loading">Loading users...</div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="page-container">
-      <div className="dashboard-header">
-        <h1>👥 User Management</h1>
-        <p>Manage farm workers and administrators</p>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">User Management</h1>
+          <p className="text-slate-500 mt-1">Manage farm workers and administrators</p>
+        </div>
       </div>
 
       {message && (
         <div
-          className={
-            message.includes('Error') ? 'error-message' : 'success-message'
-          }
+          className={`p-4 rounded-xl border-l-4 ${
+            message.includes('Error')
+              ? 'bg-red-50 border-red-500 text-red-700'
+              : 'bg-green-50 border-green-500 text-green-700'
+          }`}
         >
           {message}
         </div>
       )}
 
-      <div className="users-table-container">
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Phone</th>
-              <th>Status</th>
-              <th>Joined</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((userItem) => (
-              <tr key={userItem._id}>
-                <td>{userItem.name}</td>
-                <td>{userItem.email}</td>
-                <td>
-                  <span className={`role-badge ${userItem.role}`}>
-                    {userItem.role}
-                  </span>
-                </td>
-                <td>{userItem.phone || 'Not provided'}</td>
-                <td>
-                  <span
-                    className={`status-badge ${userItem.isActive ? 'active' : 'inactive'}`}
-                  >
-                    {userItem.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td>{new Date(userItem.createdAt).toLocaleDateString()}</td>
-                <td>
-                  <div className="action-buttons">
-                    <button
-                      onClick={() =>
-                        handleToggleStatus(userItem._id, userItem.isActive)
-                      }
-                      className={`btn-small ${userItem.isActive ? 'btn-warning' : 'btn-success'}`}
-                    >
-                      {userItem.isActive ? 'Deactivate' : 'Activate'}
-                    </button>
-                    {userItem._id !== user._id && (
-                      <button
-                        onClick={() =>
-                          handleDeleteUser(userItem._id, userItem.name)
-                        }
-                        className="btn-small btn-danger"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </td>
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Name</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Email</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Role</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Phone</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Status</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Joined</th>
+                <th className="px-6 py-4 text-sm font-semibold text-slate-600">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {users.length === 0 && (
-        <div className="content-placeholder">
-          <p>No users found.</p>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {users.map((userItem) => (
+                <tr key={userItem._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 text-slate-900 font-medium">{userItem.name}</td>
+                  <td className="px-6 py-4 text-slate-600">{userItem.email}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      userItem.role === 'admin' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {userItem.role === 'admin' ? '👑 Admin' : '👷 Worker'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-600">{userItem.phone || '-'}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      userItem.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {userItem.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-600">
+                    {new Date(userItem.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={userItem.isActive ? 'warning' : 'success'}
+                        onClick={() => handleToggleStatus(userItem._id, userItem.isActive)}
+                      >
+                        {userItem.isActive ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      {userItem._id !== user._id && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteUser(userItem._id, userItem.name)}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+        
+        {users.length === 0 && (
+          <div className="p-12 text-center text-slate-500">
+            No users found.
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

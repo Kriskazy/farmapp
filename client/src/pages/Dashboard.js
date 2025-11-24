@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
+import Card from '../components/common/Card';
+import WeatherWidget from '../components/dashboard/WeatherWidget';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -33,12 +35,12 @@ const Dashboard = () => {
       high: 'bg-orange-100 text-orange-700',
       urgent: 'bg-red-100 text-red-700',
     };
-    return colors[priority] || 'bg-gray-100 text-gray-700';
+    return colors[priority] || 'bg-slate-100 text-slate-700';
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-gray-100 text-gray-700',
+      pending: 'bg-slate-100 text-slate-700',
       'in-progress': 'bg-blue-100 text-blue-700',
       completed: 'bg-green-100 text-green-700',
       planted: 'bg-blue-100 text-blue-700',
@@ -46,7 +48,7 @@ const Dashboard = () => {
       ready: 'bg-yellow-100 text-yellow-700',
       harvested: 'bg-green-100 text-green-700',
     };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return colors[status] || 'bg-slate-100 text-slate-700';
   };
 
   const formatDate = (dateString) => {
@@ -64,24 +66,17 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Loading dashboard...</p>
-        </div>
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
-        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg max-w-md">
-          <div className="flex items-center">
-            <span className="text-red-500 text-2xl mr-3">⚠️</span>
-            <p className="text-red-700">{error}</p>
-          </div>
-        </div>
+      <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r">
+        <p className="font-bold">Error</p>
+        <p>{error}</p>
       </div>
     );
   }
@@ -89,381 +84,229 @@ const Dashboard = () => {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header with Gradient Background */}
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-3xl shadow-2xl p-8 mb-8 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                {isAdmin ? 'Farm Management Dashboard' : 'My Farm Dashboard'}
-              </h1>
-              <p className="text-green-100 text-lg">
-                Welcome back, {dashboardData?.user?.name}! Here's your farm
-                overview.
-              </p>
-            </div>
-            <div className="hidden md:block">
-              <div className="text-6xl animate-bounce">
-                {isAdmin ? '🎯' : '🚜'}
-              </div>
-            </div>
-          </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-3xl shadow-xl p-8 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-secondary-500 opacity-20 rounded-full blur-2xl"></div>
+        
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            {isAdmin ? 'Farm Overview' : 'My Dashboard'}
+          </h1>
+          <p className="text-primary-100 text-lg">
+            Welcome back, {dashboardData?.user?.name}! Here's what's happening on your farm today.
+          </p>
         </div>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Tasks Card */}
-          <Link to="/tasks" className="group">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-blue-500 transform hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">📋</div>
+      {/* Weather Widget */}
+      <div className="mb-8 h-96">
+        <WeatherWidget />
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link to="/tasks">
+          <Card hover className="h-full border-l-4 border-l-blue-500">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400 text-2xl">📋</div>
+              <div className="text-right">
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Tasks</p>
+                <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{dashboardData?.taskStats?.total || 0}</h3>
+              </div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">{dashboardData?.taskStats?.pending || 0} pending</span>
+              <span className="text-red-500 font-medium">{dashboardData?.taskStats?.overdue || 0} overdue</span>
+            </div>
+          </Card>
+        </Link>
+
+        <Link to="/crops">
+          <Card hover className="h-full border-l-4 border-l-green-500">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl text-green-600 dark:text-green-400 text-2xl">🌱</div>
+              <div className="text-right">
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Crops</p>
+                <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{dashboardData?.cropStats?.total || 0}</h3>
+              </div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">{dashboardData?.cropStats?.growing || 0} growing</span>
+              <span className="text-green-600 font-medium">{dashboardData?.cropStats?.ready || 0} ready</span>
+            </div>
+          </Card>
+        </Link>
+
+        <Link to="/livestock">
+          <Card hover className="h-full border-l-4 border-l-amber-500">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400 text-2xl">🐄</div>
+              <div className="text-right">
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Livestock</p>
+                <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{dashboardData?.livestockStats?.total || 0}</h3>
+              </div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">{dashboardData?.livestockStats?.healthy || 0} healthy</span>
+              <span className="text-amber-600 font-medium">{dashboardData?.livestockStats?.needAttention || 0} check</span>
+            </div>
+          </Card>
+        </Link>
+
+        {isAdmin && (
+          <Link to="/admin/users">
+            <Card hover className="h-full border-l-4 border-l-purple-500">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400 text-2xl">👥</div>
                 <div className="text-right">
-                  <p className="text-gray-500 text-sm font-medium">Tasks</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {dashboardData?.taskStats?.total || 0}
-                  </p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Team Members</p>
+                  <h3 className="text-3xl font-bold text-slate-800 dark:text-white">{dashboardData?.totalUsers || 0}</h3>
                 </div>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
-                  {dashboardData?.taskStats?.pending || 0} pending
-                </span>
-                <span className="text-red-600 font-semibold">
-                  {dashboardData?.taskStats?.overdue || 0} overdue
-                </span>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 dark:text-slate-400">{dashboardData?.totalWorkers || 0} workers</span>
+                <span className="text-purple-600 font-medium">{dashboardData?.activeUsers || 0} active</span>
               </div>
-              <div className="mt-4 text-blue-600 text-sm font-medium group-hover:text-blue-700">
-                View all tasks →
-              </div>
-            </div>
+            </Card>
           </Link>
+        )}
+      </div>
 
-          {/* Crops Card */}
-          <Link to="/crops" className="group">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-green-500 transform hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">🌱</div>
-                <div className="text-right">
-                  <p className="text-gray-500 text-sm font-medium">Crops</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {dashboardData?.cropStats?.total || 0}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
-                  {dashboardData?.cropStats?.growing || 0} growing
-                </span>
-                <span className="text-green-600 font-semibold">
-                  {dashboardData?.cropStats?.ready || 0} ready
-                </span>
-              </div>
-              <div className="mt-4 text-green-600 text-sm font-medium group-hover:text-green-700">
-                View all crops →
-              </div>
-            </div>
-          </Link>
-
-          {/* Livestock Card */}
-          <Link to="/livestock" className="group">
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-yellow-500 transform hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-4xl">🐄</div>
-                <div className="text-right">
-                  <p className="text-gray-500 text-sm font-medium">Livestock</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {dashboardData?.livestockStats?.total || 0}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">
-                  {dashboardData?.livestockStats?.healthy || 0} healthy
-                </span>
-                <span className="text-orange-600 font-semibold">
-                  {dashboardData?.livestockStats?.needAttention || 0} need
-                  attention
-                </span>
-              </div>
-              <div className="mt-4 text-yellow-600 text-sm font-medium group-hover:text-yellow-700">
-                View livestock →
-              </div>
-            </div>
-          </Link>
-
-          {/* Team Card (Admin Only) */}
-          {isAdmin && (
-            <Link to="/admin/users" className="group">
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-l-4 border-purple-500 transform hover:scale-105">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-4xl">👥</div>
-                  <div className="text-right">
-                    <p className="text-gray-500 text-sm font-medium">Team</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {dashboardData?.totalUsers || 0}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">
-                    {dashboardData?.totalWorkers || 0} workers
-                  </span>
-                  <span className="text-purple-600 font-semibold">
-                    {dashboardData?.activeUsers || 0} active
-                  </span>
-                </div>
-                <div className="mt-4 text-purple-600 text-sm font-medium group-hover:text-purple-700">
-                  Manage users →
-                </div>
-              </div>
-            </Link>
-          )}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - 2/3 width */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Upcoming Tasks */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                  <span className="mr-2">🎯</span>
-                  {isAdmin ? 'Upcoming Tasks' : 'My Upcoming Tasks'}
-                </h3>
-                <Link
-                  to="/tasks"
-                  className="text-green-600 hover:text-green-700 text-sm font-medium transition-colors"
-                >
-                  See all →
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {dashboardData?.upcomingTasks?.length > 0 ? (
-                  dashboardData.upcomingTasks.map((task) => (
-                    <div
-                      key={task._id}
-                      className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200 hover:border-green-300 transition-all"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">
-                            {task.title}
-                          </h4>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${getTaskPriorityColor(
-                                task.priority
-                              )}`}
-                            >
-                              {task.priority}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              {formatDate(task.dueDate)}
-                            </span>
-                            {isAdmin && task.assignedTo?.name && (
-                              <span className="text-sm text-gray-500">
-                                👤 {task.assignedTo.name}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-gray-400">
-                    <div className="text-5xl mb-3">📭</div>
-                    <p>No upcoming tasks</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Crops */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                  <span className="mr-2">🌱</span>
-                  Recent Crop Activity
-                </h3>
-                <Link
-                  to="/crops"
-                  className="text-green-600 hover:text-green-700 text-sm font-medium transition-colors"
-                >
-                  See all →
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {dashboardData?.recentCrops?.length > 0 ? (
-                  dashboardData.recentCrops.map((crop) => (
-                    <div
-                      key={crop._id}
-                      className="bg-gradient-to-r from-green-50 to-white p-4 rounded-xl border border-gray-200 hover:border-green-300 transition-all"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">
-                            {crop.name}
-                          </h4>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                crop.status
-                              )}`}
-                            >
-                              {crop.status}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              📍 {crop.field}
-                            </span>
-                          </div>
-                          <div className="mt-2 text-sm text-gray-500">
-                            Expected harvest:{' '}
-                            {new Date(
-                              crop.expectedHarvestDate
-                            ).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-gray-400">
-                    <div className="text-5xl mb-3">🌾</div>
-                    <p>No recent crop activity</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - 1/3 width */}
-          <div className="space-y-6">
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                <span className="mr-2">⚡</span>
-                Quick Actions
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Upcoming Tasks */}
+          <Card>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <span className="text-2xl">🎯</span> Upcoming Tasks
               </h3>
-              <div className="space-y-3">
-                {isAdmin && (
-                  <>
-                    <Link
-                      to="/tasks"
-                      className="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg text-center"
-                    >
-                      <span className="mr-2">📝</span>
-                      Create Task
-                    </Link>
-                    <Link
-                      to="/crops"
-                      className="block w-full bg-white border-2 border-green-600 text-green-600 py-3 px-4 rounded-xl font-medium hover:bg-green-50 transition-all text-center"
-                    >
-                      <span className="mr-2">🌱</span>
-                      Add Crop
-                    </Link>
-                  </>
-                )}
-                <Link
-                  to="/livestock"
-                  className="block w-full bg-white border-2 border-yellow-600 text-yellow-600 py-3 px-4 rounded-xl font-medium hover:bg-yellow-50 transition-all text-center"
-                >
-                  <span className="mr-2">🐄</span>
-                  {isAdmin ? 'Add Animal' : 'View Animals'}
-                </Link>
-                {isAdmin && (
-                  <Link
-                    to="/admin/users"
-                    className="block w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg text-center"
-                  >
-                    <span className="mr-2">👥</span>
-                    Manage Team
+              <Link to="/tasks" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                View All
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {dashboardData?.upcomingTasks?.length > 0 ? (
+                dashboardData.upcomingTasks.map((task) => (
+                  <div key={task._id} className="group p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-500/30 hover:shadow-md transition-all duration-200">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold text-slate-900 dark:text-white mb-1">{task.title}</h4>
+                        <div className="flex items-center gap-3 text-sm">
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getTaskPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            📅 {formatDate(task.dueDate)}
+                          </span>
+                        </div>
+                      </div>
+                      {isAdmin && task.assignedTo?.name && (
+                        <div className="text-xs bg-white dark:bg-slate-700 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                          👤 {task.assignedTo.name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <div className="text-4xl mb-2">✨</div>
+                  <p>No upcoming tasks. You're all caught up!</p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <span className="text-2xl">🌾</span> Recent Crop Activity
+              </h3>
+              <Link to="/crops" className="text-primary-600 hover:text-primary-700 font-medium text-sm">
+                View All
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {dashboardData?.recentCrops?.length > 0 ? (
+                dashboardData.recentCrops.map((crop) => (
+                  <div key={crop._id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                    <div>
+                      <h4 className="font-semibold text-slate-900 dark:text-white">{crop.name}</h4>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">📍 {crop.field}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium mb-1 ${getStatusColor(crop.status)}`}>
+                        {crop.status}
+                      </span>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">
+                        Harvest: {new Date(crop.expectedHarvestDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <p>No recent crop activity recorded.</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-8">
+          {/* Quick Actions */}
+          <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-none">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <span className="text-2xl">⚡</span> Quick Actions
+            </h3>
+            <div className="space-y-3">
+              {isAdmin && (
+                <>
+                  <Link to="/tasks" className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm">
+                    <span className="text-xl">📝</span>
+                    <span className="font-medium">Create New Task</span>
                   </Link>
-                )}
-              </div>
+                  <Link to="/crops" className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm">
+                    <span className="text-xl">🌱</span>
+                    <span className="font-medium">Add New Crop</span>
+                  </Link>
+                </>
+              )}
+              <Link to="/livestock" className="flex items-center gap-3 p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors backdrop-blur-sm">
+                <span className="text-xl">🐄</span>
+                <span className="font-medium">{isAdmin ? 'Add Animal' : 'View Animals'}</span>
+              </Link>
             </div>
+          </Card>
 
-            {/* Livestock Overview */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                  <span className="mr-2">🐄</span>
-                  Livestock
-                </h3>
-                <Link
-                  to="/livestock"
-                  className="text-green-600 hover:text-green-700 text-sm font-medium transition-colors"
-                >
-                  See all →
-                </Link>
+          {/* Farm Summary */}
+          <Card>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Farm Summary</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400">
+                <span className="font-medium">Total Area</span>
+                <span className="font-bold text-lg">
+                  {dashboardData?.cropAreaData?.reduce((acc, curr) => acc + curr.totalArea, 0) || 0} ac
+                </span>
               </div>
-              <div className="space-y-2">
-                {dashboardData?.livestockByType?.length > 0 ? (
-                  dashboardData.livestockByType.map((type) => (
-                    <div
-                      key={type._id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <span className="text-gray-700 font-medium capitalize">
-                        {type._id}
-                      </span>
-                      <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        {type.count}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-400">
-                    <div className="text-4xl mb-2">🐾</div>
-                    <p className="text-sm">No livestock registered</p>
-                  </div>
-                )}
+              <div className="flex justify-between items-center p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400">
+                <span className="font-medium">Active Fields</span>
+                <span className="font-bold text-lg">{dashboardData?.cropStats?.total || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400">
+                <span className="font-medium">Livestock</span>
+                <span className="font-bold text-lg">{dashboardData?.livestockStats?.total || 0}</span>
               </div>
             </div>
-
-            {/* Farm Overview */}
-            <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-2xl shadow-lg p-6 text-white">
-              <h3 className="text-xl font-bold mb-4 flex items-center">
-                <span className="mr-2">📊</span>
-                Farm Overview
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-green-500">
-                  <span className="text-green-100">Total Area</span>
-                  <span className="font-bold text-lg">
-                    {dashboardData?.cropAreaData?.reduce(
-                      (total, area) => total + area.totalArea,
-                      0
-                    ) || 0}{' '}
-                    acres
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-green-500">
-                  <span className="text-green-100">Crop Fields</span>
-                  <span className="font-bold text-lg">
-                    {dashboardData?.cropStats?.total || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-green-500">
-                  <span className="text-green-100">Active Animals</span>
-                  <span className="font-bold text-lg">
-                    {dashboardData?.livestockStats?.total || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-green-100">Tasks This Week</span>
-                  <span className="font-bold text-lg">
-                    {dashboardData?.weeklyTaskData?.reduce(
-                      (total, day) => total + day.count,
-                      0
-                    ) || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
